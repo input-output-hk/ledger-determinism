@@ -1,0 +1,206 @@
+\section{Blocks, transactions, and threads}
+\label{sec:blockchain}
+
+We can use the notion of threads to represent the relationship between blocks
+and transactions.
+Let us consider an illustrative example, which we will afterwards generalize to
+formally state the structure most blockchains are instances of.
+Consider the types are as specified in Figure \ref{fig:block-thread}.
+
+\begin{figure*}[htb]
+  \emph{Block example types}
+  %
+  \begin{equation*}
+    \begin{array}{r@{~=~}l@{~~~~}lr}
+      \Value
+      & \Z
+      & \text{The ledger's currency} \\
+      \Ix
+      & \N
+      & \text{Index type} \\
+      \TxIn
+      & (\Tx, \Ix)
+      & \text{Transaction input} \\
+      \TxOut
+      & \Ix~\mapsto~\Value
+      & \text{Transaction outputs} \\
+      \UTxO
+      & \TxIn~\mapsto~\Value
+      & \text{UTxO} \\
+      \type{UTxOTx}
+      & ([\TxIn],~\TxOut,~\Slot)
+      & \text{Transaction} \\
+      \type{Block}
+      & (\Block^?,~[\type{UTxOTx}])
+      & \text{Block} \\
+      \type{ChainState}
+      & (\Block^?,~\Slot,~\UTxO)
+      & \text{Chain state} \\
+    \end{array}
+  \end{equation*}
+  \caption{Types of a block-based ledger}
+  \label{fig:block-thread}
+\end{figure*}
+
+In blockchains, as the name suggests, the atomic state update
+is done by a block rather than a transaction. Blocks contain lists of transactions, as well
+as other data used to perform the update.
+Block application updates the \emph{chain state}, which the state updated by
+transactions is a part of. So, blocks play the role of the $\Tx~\leteq~\Block$ type in our
+model, and the $\State$ refers to the chain state.
+
+We define the initial state by $\fun{initState}~\leteq~(\Nt,~0,~\empty)$, and the block application function is
+
+\[ \ups~(b,~lstx)~(b_c,~slot,~utxo)~=~\begin{cases}
+  \Err & \text{ if } \not~\fun{blockChecks}~(b,~lstx)~(b_c,~slot,~utxo) \\
+  ((b,~lstx),~slot~+~1,~\fun{foldl}~(\fun{updateUTxO}~slot)~utxo~lstx) & \text{ otherwise }
+\end{cases} \]
+
+Performs the following checks via the $\fun{blockChecks}$ function, and returns $\Err$
+either fails :
+
+\begin{itemize}
+  \item[(i)] $b~==~b_c$, which ensures that the (last) block recorded in the state is
+  the same block to which the new block specifies that it must be attached
+
+  \item[(ii)] $lstx~\neq~[]$, which ensures that blocks must contain at least one
+  transaction
+
+  \item[(ii)] $\fun{foldl}~(\fun{updateUTxO}~slot)~utxo~lstx~\neq~\Err$, which verifies
+  that the UTxO set is updated without errors by left-folding $\fun{updateUTxO}$ over
+  the list of transactions.
+\end{itemize}
+
+The $\fun{updateUTxO}$ update is done in the usual way, by removing all entries corresponding
+to transaction inputs, and adding ones corresponding to the outputs. The following
+checks are performed, and $\Err$ is returned by $\fun{updateUTxO}~slot~(lsin,~outs,~lastslot)~utxo$
+if any of them fail :
+
+\begin{itemize}
+  \item[(i)]  $lsin ~\neq~ \Nt$ ensures the transaction has at least one input  \\
+
+  \item[(ii)] ensures the current slot is before or equal to the slot up to which the
+  transaction is valid
+
+  \item[(iii)] $\forall i \in lsin, i \mapsto \wcard \in utxo$ ensures all the transaction
+  inputs correspond to existing UTxO entries \\
+
+  \item[(iv)] $\not~\Sigma_{\wcard \mapsto v\in outs} v~ =~\Sigma_{v\in \{v~\mid~i \in lsin \wedge  i\mapsto v~\in~utxo \}} v$
+  is the preservation of value condition, which ensure that the total value in the consumed UTxO entries
+  is equal to the value in the entries produced  \\
+
+\end{itemize}
+
+\[ \fun{updateUTxO}~slot~(lsin,~outs,~lastslot)~utxo~=~
+  (utxo~\setminus~\{ i \mapsto \wcard \mid i \in lsin \}) \cup \{ ((lsin,~outs),~ix) \mapsto v \mid ix \mapsto v \in outs  \]
+
+Note here that we use the full block and transaction data where their hashes would
+normally be used instead : within keys of UTxO entries, and inside
+blocks to specify the preceeding block. The reason for this is that properties
+we discuss here may not hold up without the assumption there will be no hash collisions,
+and additional machinery is required to reason under this assumption, while using
+hashes instead of preimages does not appear to provide additional insight into the
+properties we study here. However, a closer examination of this claim could be
+part of future work.
+
+We see immediately that the update function of the UTxO set (along with the
+constraints on it) in this example can be specified by
+
+\[ \fun{updateUTxOThread} ~lstx ~(\wcard,~slot,~ utxo)~ utxo'~ \leteq~ \begin{cases}
+  \fun{foldl}~(\fun{updateUTxO}~slot)~utxo'~lstx & \text { if } utxo~==~utxo' \\
+  \Err & \text{ otherwise}
+\end{cases}  \]
+
+Since the thread update is only valid if the argument corresponding to the state of the
+thread (here, $utxo'$) is equal to the the projection from the chain state to the
+thread state (here, $utxo$ in the chain state triple).
+
+The slot number is not used in the generation
+of the updated UTxO set in the case when a UTxO set, and not $\Err$, is returned. However, in order to
+determine whether a thread update is permitted, the $slot$ value, which
+is not included in the UTxO thread data, is used needed.
+We will show that it is in fact a constraint on the design of deterministic ledgers
+that this pattern of thread update
+be followed, ie. the updated state of a thread can depend on data external to the thread,
+but only in so far that the update can produce an error for certain values if that data.
+
+We can make this example more general by remaining agnostic of the data types of the
+chain state. Following this example,
+
+\begin{definition}
+  \begin{itemize}
+    \item[(i)] Given a type $\Tx$, a $\Block$ is a type which admits
+    the following accessors :
+
+    \[ \fun{prevBlock} \in \Block \to \Block \]
+
+    \[ \fun{txList} \in~\Block \to [\Tx] \]
+
+%    \[ \fun{time} \in \type{Header} \to \Time \]
+
+    \item[(ii)] A $\type{ChainState}$ is a type with the following accessors
+
+    \[ \fun{lastBlock} \in \type{ChainState}~\to \Block \]
+
+    \[ \fun{txState} \in \Block \to \type{TxState}  \]
+
+    where $\type{TxState}$.
+
+    \item[(iv)] Given an initial state $\fun{initState}~\in~\Block$ and an update procedure
+    $\ups~\in~\Block~\to~\type{ChainState}~\to~\type{ChainState}$, the tuple
+    $(\Block,~\type{ChainState},~\ups,~\fun{initState})$ is said to be a
+    \emph{blockchain} if
+
+    \begin{itemize}
+      \item[(1)] it is a ledger specification,
+
+      \item[(2)] it admits a thread $\type{TxState}$ with the update function defined by
+
+     \[ \fun{updateLedger} ~lstx ~(led,~ os)~ led'~ \leteq~ \begin{cases}
+       \fun{foldl}~(\fun{updateLedger}~os)~led'~lstx & \text { if } led~==~led' \\
+       \Err & \text{ otherwise}
+     \end{cases}  \]
+
+    \end{itemize}
+
+     and
+
+    wherein $(\fun{updateLedger}~os)$
+
+    A  $(\Block,~\type{ChainState},~\fun{initState})
+    and an update procedure
+
+
+  \end{itemize}
+
+  , as we will see in the next definition, represents the
+  part of the $\type{ChainState}$ that applying transactions updates
+
+\end{definition}
+
+Recall here, again, that our formalism is not probabilistic, so, unlike a realistic
+deployed blockchain, it does not rely on hash functions having a low probability
+of collisions. Instead, we use pre-images where hashes would normally be used in
+practice (eg. as pointers to previous blocks).
+
+we will refer to the \emph{ledger} as the thread in the
+chain state that can be described as \emph{any data updatable by a transaction}. Formally,
+
+While the above specification is a fairly abstract idea of what a blockchain is,
+some distributed-consensus append-only ledgers may have a structure which deviates from the
+specification we present here. However, the
+\cite{Cardano-ledger-spec} \cite{tezos} \cite{ethereum} \cite{Nakamoto}
+
+
+
+In the case of updating the UTxO set and the protocol parameter record, this
+situation can manifest itself as, eg. a specifying a UTxO update which disallows some
+new UTxOs to be added to it if they do not satisfy a constraint that depends on
+one of the protocol parameters. There might be, for instance, a "minimum value constraint"
+imposed by the $\fun{updateT}_{UTxO}~tx$ function
+on any new UTxO being added by a $tx$ such that the value contained in a UTxO entry must be greater
+than a value indicated in some protocol parameter in $\fun{minV}$. The update specification
+for protocol paramenters may also have some constraints.
+
+Any transaction that is valid (ie. does not produce an $\Err$) must satisfy both the
+constraints on the UTxO update, as well as those for the protocol parameter updates.

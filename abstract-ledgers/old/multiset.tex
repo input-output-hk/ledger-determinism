@@ -1,0 +1,22 @@
+\section{Multi-set Specified Ledgers}
+\label{sec:multiset}
+
+In Section \ref{sec:determinism} we discussed the impact of re-ordering transactions,
+and the possibility of reaching different states by applying the same multi-set
+of transactions to a given state. We will now consider when, if ever, it should
+be possible to reach a given state with distinct multi-sets.
+
+\begin{figure*}[htb]
+  \emph{Order-determinism constraint on a ledger specification}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+    \fun{orderDetConstraint}_L ~=~ & \forall~(s~\in~\type{ValSt}_L)~(txs~\in~\seqof{\type{Tx}_L}),~\\
+    & ~~~~txs'~\in~\fun{Permutation}~txs,~\\
+    & ~~~~\fun{validUpdate}_L~s~txs~\neq~\Err~\neq~\fun{validUpdate}_L~s~txs' \\
+    & ~~~~\Rightarrow~~\fun{validUpdate}_L~s~txs~=~\fun{validUpdate}_L~s~txs'
+    \end{array}
+  \end{equation*}
+  \caption{Order-determinism}
+  \label{fig:order-det}
+\end{figure*}

@@ -1,0 +1,5 @@
+PWD /Users/polina/Documents/IOHK/state-machine-research/abstract-ledger-specification/abstract-ledgers
+INPUT /Users/polina/Library/Application Support/MiKTeX/texmfs/data/miktex/data/le/pdftex/pdflatex.fmt
+INPUT intro.tex
+OUTPUT intro.log
+INPUT /Users/polina/Library/Application Support/MiKTeX/texmfs/install/fonts/tfm/public/cm/cmbx10.tfm

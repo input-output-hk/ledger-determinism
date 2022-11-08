@@ -1,0 +1,67 @@
+\section{Introduction}
+\label{sec:intro}
+
+In the context of blockchain transaction processing and smart contract execution,
+determinism is usually taken to mean something like "the ability to predict locally,
+before subimitting a transaction, the on-chain result of processing that transaction, including its scripts".
+This is an important aspect of ledger design because users care about being able to accurately predict
+fees they will be charged, rewards they will receive from staking, outcomes of
+smart contract executions, etc. before posting transactions.
+Transaction processing and smart contract execution on a variety of ledgers can
+be informally characterized as either more or less determnistic according to this conception
+of determinism.
+
+In order to formalize a shared definition of determinism that can be used to characterize a variety
+of ledgers across different platformss, we first present an abstract
+ledger model capturing the architectural core shared by a number of prominent
+platforms \cite{Cardano-ledger-spec} \cite{tezos} \cite{ethereum} \cite{Nakamoto}.
+This core can be summarized as follows : a ledger is a state transition system,
+with transactions (or blocks) as the only transitions, some of which are
+invalid.
+
+With this simplified functional view of ledgers, we formalize several interpretations
+of the informal definition of determinism, and use several mathematical tools
+for analysis of it. We argue that
+the only source of non-determinism in our model is the impossibility of
+predicting the exact on-chain state users' transaction will be applied to,
+which is related to commutativity of state transitions (for previous work on
+commuting automata, see \cite{commautomata}). This
+could be due to unpredictable network propagation of transactions, or malicious
+actions on the parts of other users.
+
+
+%
+% \begin{itemize}
+%
+%   \item[(i)] define what is an abstract ledger UI,
+%
+%   \item[(ii)] cite as examples the following ledgers implementing it
+%   \begin{itemize}
+%     \item cardano (https://allquantor.at/blockchainbib/pdf/corduan2019formal.pdf , see Figure 13 for UTxO state update with a transaction, for example),
+%     \item bitcoin (i only saw this in the Ethereum paper under "Bitcoin as a state transition system", https://ethereum.org/en/whitepaper/), and
+%     \item ethereum (same link as above, see "Ethereum state transition function")
+%   \end{itemize}
+%
+%   \item[(iii)] define order determinism (reordering transactions gives the same state or $\Err$)
+%   \item[(iv)] define update determinism (this is a recent change to the paper, i am not sure if this is something you looked at, basically, if for some $s, tx, tx', (s ~tx) = (s ~tx')$ and not $\Err$ , it follows that for all $s', (s' ~tx) = (s' ~tx')$ )
+%
+%   \item[(v)] argue that update determinism is weaker (i think i can prove this), but still useful
+%
+%   \item[(vi)] give simple examples of both
+%
+%   \item[(vii)] discuss a specific example of indeterminism in Cardano (pointer addresses), and explain how this problem is a result of making some of the ledger only update-deterministic, then using this ledger data in calculations that require order determinism
+%
+%   \item[(viii)] conjecture that an update function that looks like $\pi_{TxS} ~:~ (\Tx,~\State) \to \State$ makes for deterministic ledgers - because projections commute
+%
+%   \item[(ix)] argue that the UTxO update procedure fits this update model - if you treat a key-value map as a (finite) product of values $(v1, ..., vk)$ corresponding to each of the k possible keys of the type TxId , some of which are $\Nt$ . The projection into $\UTXO$ from the pair $(\Tx, \UTXO)$ implicitly contains to-be-excluded  values, which are specified by their input keys, and new key values to which we project (the outputs)
+%
+%   \item[(x)] distinguish the UTxO determinism from its replay protection, compare to attested accouts model \\ \\
+%
+%   and possibly,
+%   \item[(xi)]  explain what the constraints on the derivatives (in the sense of incremental lambda calculus) of ledger updates are for (1) order determinism (2) state determinism, which are different
+%
+%   \item[(xii)]  explain that threads are projections together with their update functions (or "pointers" to specific parts of a ledger, eg. a state machine or the UTxO set in a EUTxO ledger)
+%
+%   \item[(xiii)]  say that a specific thread can be deterministic even if the whole ledger is not, again giving example of Cardano (state machines are deterministic, point to proof in the ledger spec)
+%
+% \end{itemize}

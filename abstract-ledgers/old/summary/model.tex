@@ -1,0 +1,116 @@
+\section{The Abstract Ledger Model}
+\label{sec:model}
+
+
+Each instance of $\LS$ (ledger specification, or ledger) requires the structure
+given in Figure \ref{fig:ledger-spec} to be specified.
+
+We use the $A_{\Err}~=~A~\uniondistinct~\Err$ to represent a non-$A$ error term in
+addition to terms of the $A$ type.
+
+We omit the subscript $_L$ whenever $L$ is implied, eg. $\State$ for $\State_L$.
+We also use the shorthand here
+
+\[ (s~ds)~:=~\fun{validUpdate}_L~ s~ ds \]
+
+\todopv{Need better notation than this one (above)}
+
+Given $L$, we denote the set of dependent pairs, together with the $\Err$ state, by $\ValSt_{\Err}$, where
+
+\begin{itemize}
+  \item the first term of the dependent pair is a state $s : \State_L$, and
+  \item the second is a proof that there exists a list of transactions that, applied in sequence to
+ the initial state, produce the state $s$. We call such a list the \emph{trace} of $s$.
+\end{itemize}
+
+We call $s : \State_L$ a \emph{valid state} whenever $(s, pf)~:~\ValSt$ for some
+$pf$ specifying a trace of $s$. The state $s$ may have more than one trace.
+
+\begin{figure*}[htb]
+  \emph{$\LS$ Type Accessors}
+  %
+  \begin{equation*}
+    \begin{array}{r@{~\in~}l@{~~~~}lr}
+      \type{Tx}_L
+      & \type{Set}
+      & \text{The set of transactions} \\
+      \type{State}_L
+      & \type{Set}
+      & \text{The set of ledger states} \\
+    \end{array}
+  \end{equation*}
+  \emph{$\LS$ functions}
+  %
+  \begin{equation*}
+    \begin{array}{r@{~\in~}l@{~~~~}lr}
+    \ups_L & ~\type{Tx}_L \to \type{State}_L \to (\type{State}_L)_{\Err}
+    & \text{Updates state with a given transaction} \\
+    \fun{initState}_L & ~\type{State}_L
+    & \text{Gives the initial state of the specification} \\
+    \end{array}
+  \end{equation*}
+  \caption{Ledger Specification for a ledger $L\in~\LS$}
+  \label{fig:ledger-spec}
+\end{figure*}
+
+\begin{figure*}[htb]
+  \emph{State Computation}
+  %
+  \begin{align*}
+    & \fun{updateErr}_L ~\in~ \type{Tx}_L \to (\type{State}_L)_{\Err} \to (\type{State}_L)_{\Err} \\
+    & \fun{updateErr}_L ~tx~s~ ~=~
+        \begin{cases}
+          \Err & \text{if~} s = \Err \\
+          \ups~tx~s & \text{otherwise}
+        \end{cases} \\
+    & \text{Updates a error state} \\~\\
+    %
+    & \fun{computeState}_L ~\in~ \type{State}_L \to \seqof{(\type{Tx}_L)} \to (\type{State}_L)_{\Err} \\
+    & \fun{computeState}_L~ initS ~txs ~=~
+        \fun{foldl}~\fun{updateErr}_L~initS~txs \\
+    & \text{Applies a list of transactions to the initial state} \\~\\
+    %
+    & \type{ValSt}_L ~\in~ \type{Set} \\
+    & \type{ValSt}_L ~=~
+        \{ ~s~ \mid ~\fun{validState}_L~s~\}_{\Err} \\
+    & \text{Set of all valid states of $L$} \\~\\
+    %
+    & \fun{validUpdate}_L ~\in~ \type{ValSt}_L \to \seqof{(\type{Tx}_L)} \to \type{ValSt}_L\\
+    & \fun{validUpdate}_L~s~txs ~=~\\
+        &~~~~\begin{cases}
+          \Err & \text{if~} s = \Err \\
+          (\fun{computeState}_L~s~txs,~\fun{proveVl}_L~s~txs) & \text{otherwise}
+        \end{cases} \\
+    & \text{A valid state is updated to another valid state or $\Err$} \\~\\
+  \end{align*}
+  \emph{Validity of ledgers, transactions, and states}
+  %
+  \begin{align*}
+    & \fun{validTx}_L ~\in~ \type{Tx}_L \to \type{State}_L \to \Bool \\
+    & \fun{validTx}_L~tx~s~ = ~\fun{update}_L ~tx~s~ \neq ~\Err \\
+    & \text{Transaction updates a state non-trivially} \\~\\
+    %
+    & \fun{valid}_L ~\in~ \seqof{(\type{Tx}_L)} \to \Bool \\
+    & \fun{valid}_L~txs~ = ~\fun{computeState}_L ~txs~ \neq ~\Err \\
+    & \text{Computed state is non-trivial} \\~\\
+    %
+    & \fun{validState}_L ~\in~ \type{State}_L \to \type{Prop} \\
+    & \fun{validState}_L~s~ = ~\exists~~txs~\in~\seqof{(\type{Tx}_L)},~
+      s~=~\fun{computeState}_L~(\fun{initState}_L) ~txs \\
+    & \text{Given state is non-trivial}
+  \end{align*}
+  \caption{$\LS$ auxiliary functions and definitions}
+  \label{fig:ledger-aux}
+\end{figure*}
+
+Proof-constructing function
+
+\[\fun{proveVl}_L ~\in~ \type{ValSt}_L \to \seqof{(\type{Tx}_L)} \to \]
+\[ (\fun{validState}_L~s) \vee (\fun{computeState}_L~s~txs~=~\Err)\]
+
+\todopv{Proof of $\fun{proveVl}_L~s~txs$ goes here. See Coq formalization.}
+
+
+\textbf{Errors in ledger updates.}
+
+\todopv{Important, cant compare reorderings without them. }

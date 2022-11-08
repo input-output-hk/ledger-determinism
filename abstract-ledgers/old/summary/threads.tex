@@ -1,0 +1,196 @@
+\section{Threads}
+\label{sec:threads}
+
+So far, we have not identified any structure in the underlying state types of
+ledgers. To study specific parts of a ledger, we introduce a concept we call
+a \emph{thread}, and denote $T \in \Th$. More specifically,
+
+\begin{definition}
+  A \emph{thread} $T \in \Th$ in a ledger specification $L$ is a tuple of
+  \begin{itemize}
+    \item[(i)] an underlying type $T$,
+
+    \item[(ii)] a function
+    \[ \fun{proj}_T ~\in~\type{State} \to T \]
+
+    That such that it has a right inverse $\fun{inj}_T$ :
+
+    \[ \fun{proj}_T~\circ~\fun{inj}_T ~=~\fun{id}_T \]
+
+    \item[(iii)] an update function $\fun{updateT}_T$ is such that
+    for all $tx,~s$,
+
+    \[ \fun{updateT}_T~tx~s~(\fun{proj}_T~s) = \Err~ \Rightarrow~ \ups~tx~s~=~ \Err \]
+
+    And if $\ups~tx~s~\neq~ \Err$,
+
+    \[ \fun{updateT}_T~tx~s~(\fun{proj}_T~s) = \fun{proj}_T~(\ups~tx~s)\]
+  \end{itemize}
+\end{definition}
+
+Note that the projection function is not from a valid state, but rather from an
+arbitrary state.
+
+\textbf{Relation between updating the thread and ledger states. }
+
+In (iii), the implication is one direction --- if the $\fun{updateT}_T$
+does not produce an error for a given $s, tx$, the $\ups$ function can still produce an error applied
+to the same transaction and state. That is, intuitively, a thread update function
+only cares that the transaction is attempting to
+update the thread data badly, and not about what it does to the rest of the ledger.
+
+Since a $\Err$ in the output of the $\fun{updateT}_T$ function implies in an error
+in the $\ups$ function applied to the same state and transaction,
+$\fun{updateT}_T$ is said to \emph{emit constraints} on the ledger update
+function.
+
+Given any type $T$ and the $\fun{proj}_T$ function, the function $\fun{updateT}$, which
+applies a transaction-state pair to a $t \in T$,
+can be defined in terms of the $\ups$ function by specifying that, unconditionally,
+
+\[ \fun{updateT}_T~tx~s~(\fun{proj}_T~s) = \fun{proj}_T~(\ups~tx~s)\]
+
+\textbf{One-object categories reperesenting threads. }
+
+Recall the one-object category than the one-object category $\type{SLC}_L$, with
+lists of transactions as the functions. We can construct a related one-object category $\mathcal{T}$ for
+any thread $T$ as follows :
+
+\begin{itemize}
+  \item the object $T_{val}$ is the image of $\ValSt$ under the $\fun{proj}_T$ function,
+  \item the hom-set of $T_{val} \to T_{val}$ is given by the set of pairs
+  $(s,~txs) : (\type{ValSt}_{L},~\seqof{(\type{Tx}_{L})})$
+
+  \item the update function used to apply a list of transactions $(s,~txs)$ is given by
+  folding $\fun{updateT}$ over $txs$ at $s$
+\end{itemize}
+
+For $\fun{proj}_T = \fun{id}_{\State}$, the $\mathcal{T}$ is the same as $\type{SLC}_L$.
+
+\todopv{Can we do pointed pairs here (i.e. $(t, s)$) instead as objects, rather than just the thread?}
+
+\begin{itemize}
+  \item[(i)] A \emph{non-persistent} thread $T~\cong~T'^?$ is one that may take on an $\Nt$ value in some valid ledger
+  states of a ledger specification $L$, i.e.
+
+  \[ \exists~~s~\in~\type{ValSt},~\fun{proj}_T~s~=~\Nt \]
+
+  A thread is called \emph{persistent} otherwise.
+
+  \item[(ii)] A \emph{single-state} thread $T$ is one where the projection function,
+  for some pair of ledger states, outputs exactly one non-$\Nt$ value.
+  \[ \forall~~s,~s'~\in~\type{ValSt}_L,~\fun{proj}_T~s~\neq~\Nt~\neq~\fun{proj}_T~s' \]
+
+  \[ \Rightarrow~\fun{proj}_T~s~=~\fun{proj}_T~s' \]
+
+\end{itemize}
+
+
+\textbf{Deterministic threads}
+
+\todopv{Does this work?}
+
+Order-determinism for a single thread is defined in Figure \ref{fig:order-thread}.
+
+\begin{figure*}[htb]
+  \emph{Order-determinism for a thread $T$ in ledger $L$}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+      \forall~(s~\in~\type{ValSt})~(txs~\in~\seqof{\type{Tx}}),~\\
+      & ~~~~txs'~\in~\fun{Permutation}~txs,~\\
+      & ~~~~(s~txs)~\neq~\Err~\neq~(s~txs') \\
+      & ~~~~\Rightarrow~~\fun{proj}_{T}~(s~txs)~=~\fun{proj}_{T}~(s~txs')
+    \end{array}
+  \end{equation*}
+  \caption{Order-determinism for a single thread}
+  \label{fig:order-thread}
+\end{figure*}
+
+Since a ledger is itself a thread, the following lemma follows immediately :
+
+\begin{lemma}
+  A ledger is OD if and only if all of its threads are.
+\end{lemma}
+
+A (probably stronger) notion of ledger determinism expressed via threads, see Figure \ref{fig:det-thread}.
+This notion of determinism for threads implies thread order-determinism.
+
+
+\begin{figure*}[htb]
+  \emph{Determinism for a thread $T$ in ledger $L$}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+      \forall~(s~s'~\in~\type{ValSt})~(tx~\in~\type{Tx}),~\\
+      & ~~~~(s~tx)~\neq~\Err~\neq~(s'~tx), \\
+      & ~~~~\fun{proj}_{T}~s~=~\fun{proj}_{T}~s' \\
+      & ~~~~\Rightarrow~~\fun{proj}_{T}~(s~tx)~=~\fun{proj}_{T}~(s'~tx)
+    \end{array}
+  \end{equation*}
+  \caption{Determinism for a single thread}
+  \label{fig:det-thread}
+\end{figure*}
+
+\subsection{Thread examples.}
+
+\textbf{Binary-valued ledgers $L$ and $K$.}
+
+Consider two ledgers, $L$ and $K$, such that
+
+\[ \State_L = \Tx_L = \{ (a,~b)~\mid~a,~ b~ \in~ \{ 0,~1\}~\}  =  \State_K = \Tx_K \]
+
+and $\fun{initState}_L = \fun{initState}_K = (0,~0)$, with update functions as follows :
+
+\begin{itemize}
+  \item[($L$)] $((a,b) ~(t_1,t_2))~ =~ (a~\fun{XOR}~t_1,~t_2)$
+
+  \item[($K$)] $((a,b) ~(t_1,t_2))~ = \begin{cases}
+    (a~\fun{XOR}~t_1,~t_2) & \text{if } b = t_2 \\
+    \Err & \text{otherwise }
+  \end{cases} $
+\end{itemize}
+
+The ledger $L$ is not order deterministic, since applying the transaction list $[ (0,1) ; (0,0) ]$
+produces a different state than $[ (0,0) ; (0,1) ]$ :
+
+\[ ((0,0) ~(0,1)~(0,0)) = (0, 0) \neq (0, 1) = ((0,0) ~(0,1)~(0,0)) \]
+
+Each term of the tuple is updated using only data from the current state of that term, and
+does not inspect the other term. We can express this in terms of threads, where $T \leteq \{ 0,~1 \}$,
+and $\fun{proj}_T \leteq \pi_0$,
+
+\[ \fun{updateT}~(a,b)~a'~(t_1,~t_2)~=~\begin{cases}
+  a~\fun{XOR}~t_1 & \text{if } a = a' \\
+  \Err & \text{otherwise }
+\end{cases} \]
+
+The first coordinate is updated using the $\fun{XOR}$ function, which is commutative.
+The second coordinate also forms a thread, with $\fun{proj}_{T'} = \pi_1$, but it
+is not deterministic.
+
+\todopv{we want to say that the change in the first coordinate is always +~t1~ mod~2,
+whereas the change in the second coordinate depends on the current state (i.e. either "flip the bit" or
+"dont flip the bit", depending on whether b and t2 match), even though
+the output itself does not depend on the current state}
+
+The ledger $K$ also has threads formed by the first and second projection function,
+however, both are deterministic. The $\pi_0$ thread is deterministic as in $L$, and
+the $\fun{updateT}$ function for the projection $\pi_1$
+either makes no changes, or fails -- instead of flipping the bit when $b \neq t_2$ (as in $L$) .
+
+\textbf{List-of-transactions ledger $\type{SLC}_{list}$.}
+
+Recall the ledger $\type{SLC}_{list}$ for a fixed transaction type $\Tx$, where the
+state is a list of processed transactions. Note that ledger itself is not OD, since
+reordering transactions produces distinct lists.
+
+Every other ledger $T$ with the same transaction type $\Tx$ and initial state $i$ is a (possibly non-persistent)
+thread in $\type{SLC}_{list}$, where $\fun{validUpdate}_T~i$ is the $\fun{proj}_T : [\Tx] \mapsto \State^?$
+function, with $\Nt$ representing the $\Err$ state.
+
+\subsection{Characterization of ledger determinism via threads.}
+
+\todopv{I would like to find any additional preconditions P1..Pn such that it is possible to say that :
+order-determinism for a single thread + P1...Pn implies thread determinism in the stronger sense --
+hopefully, no additional preconditions P1..Pn are necessary}

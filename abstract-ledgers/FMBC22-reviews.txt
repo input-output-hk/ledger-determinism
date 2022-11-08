@@ -1,0 +1,79 @@
+Dear Polina Vinogradova, Orestis Melkonian, Andre Knispel, James Chapman,
+
+We are happy to inform you that your submission has been conditionally accepted for publication in the program of FMBC'22.
+
+Determinism of ledger updates.
+
+After a thorough discussion with the PC, we would require you to address the following comments before we can finally accept your paper for the workshop:
+
+- clarify the problem the authors want to solve.
+
+Please prepare a revision of your submission that addresses the above-mentioned points by July 13, 2022.
+Apart from the requirements above, please consider addressing the comments in the reviews as you see fit.
+You can find a copy of your reviews below.
+
+We are looking forward to your presentation!
+
+Best regards,
+Clara and Zaynah
+
+SUBMISSION: 8
+TITLE: Determinism of ledger updates
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 8
+TITLE: Determinism of ledger updates
+AUTHORS: Polina Vinogradova, Orestis Melkonian, Andre Knispel and James Chapman
+> ----------- Overall evaluation -----------
+> SCORE: 2 (accept)
+> ----- TEXT:
+> As an extended abstract, I think this is a very interesting direction of research and would fit very well as a lightning talk at the workshop.
+>
+> Providing a strong mathematical foundation for defining and reasoning about different forms of determinism is important for understanding how different transactions can impact one another and how predictable transactions are. Given the pervasiveness of front-running attacks and research into topics like MEV, it is clear that the lack of certain forms of determinism in many Ethereum contracts is of both financial and security concern, so this work is clearly relevant.
+>
+> It would be lovely to see a few more of the details about the mathematical models of abstract ledgers, as I had trouble following some of the English details with no mathematical notation. That said, for an extended abstract at FMBC, I am not concerned and this work definitely looks promising.
+>
+> Nitpick: Line 32: The first sentence is not grammatical. Did you mean "*A* transaction tx is..." instead of "When transaction tx is..."?
+>
+>
+>
+> ----------------------- REVIEW 2 ---------------------
+> SUBMISSION: 8
+> TITLE: Determinism of ledger updates
+> AUTHORS: Polina Vinogradova, Orestis Melkonian, Andre Knispel and James Chapman
+>
+> ----------- Overall evaluation -----------
+> SCORE: -2 (reject)
+> ----- TEXT:
+> I am not sure what the problem is the authors try to solve. If it is just formalization of transition systems, there have been many in the past. So what is the advantage of this one.
+>
+> I am a bit confused by the paper as the terminology used appears non-standard
+> - determinism (and non-determinism) have very clear meaning in computer science (e.g., nondeterministic Turing machines)
+> - order-determinism, to the best of my understanding just means commutativity of the transactions. It is not clear why the standard term commutativity is not used. I think there is a strong relation of the definitions in the paper to the CStructs in Lamport's "Generalized Consensus and Paxos".
+>
+> Moreover, the usages of the term determinism within blockchain, is in the context of understanding blockchains as state machine replication. Here the requirement is that the state machine is deterministic, that is, that there is a transition function rather than a transition relation of the state machine, but this is not discussed, and seems to be assumed from the beginning.
+>
+>
+>
+> ----------------------- REVIEW 3 ---------------------
+> SUBMISSION: 8
+> TITLE: Determinism of ledger updates
+> AUTHORS: Polina Vinogradova, Orestis Melkonian, Andre Knispel and James Chapman
+>
+> ----------- Overall evaluation -----------
+> SCORE: 1 (weak accept)
+> ----- TEXT:
+> This paper contains 3 pages and as such is an extended abstract.
+>
+> The paper is well written (only found one typo: "to a give valid -> given") and easy to follow.
+> The authors describe their efforts to formalize a notion of determinism in blockchain transaction processing.
+>
+> It is not clear to me whether this effort is possible without considering that the network itself needs to be deterministic. Would it be possible to guarantee that a blockchain is deterministic if its underlying network is not?
+>
+> I would be interested in learning more about the definitions of order-determinism and update-determinism. Do these definitions apply to practical blockchains?
+>
+> More details would be required for a full publication but I would be curious to learn more about the ongoing work.
+>
+>
+

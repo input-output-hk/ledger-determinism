@@ -1,0 +1,50 @@
+\section{Discussion}
+
+\subparagraph*{Assumptions and limitations}
+We use the term "transaction" to refer to the ledger state transition type
+for the reason that we make the assumption that most users are concerned with
+application of transactions to the ledger state.
+However, in practice, an atomic update of a blockchain's state is a block,
+which updates ledger data that transaction application cannot modify,
+such as the hash of the previous block or the current slot number.
+The notion of threads lets us formalize the relation between
+block-based and transaction-based updates, but we leave this for future work.
+
+Our model is constructed to reflect the simplifying
+assumption that there is exactly one way to interface with a ledger --- by applying
+a transaction, which is indeed the case in most normal circumstances.
+Our model is also strictly functional, so that the update function itself
+is necessarily deterministic. We also make the assumption that the update function
+does not evolve in any way.
+
+\vspace{-.2cm}
+\subparagraph*{Applications to Cardano.}
+We can apply the tools for ledger analysis discussed above to an existing ledger ---
+the Cardano ledger with smart contract integration~\cite{alonzo}.
+We note that a component of the ledger, called pointer addresses,
+is a thread which is update-deterministic, but not order-deterministic.
+
+On the other hand, we conjecture that smart contracts implemented as state machines~\cite{eutxo} constitute threads.
+Smart contract validation has been shown to be deterministic according to a
+notion of determinism specific to the Cardano ledger presented in ~\cite{alonzo}.
+Work remains to formally demonstrate that contracts do indeed constitute threads,
+and that that the definition of determinism in ~\cite{alonzo} is equivalent
+to the order-determinism we present in this work.
+
+\vspace{-.2cm}
+\subparagraph*{Future work}
+As part of future and ongoing work, we intend to continue using the mathematical
+tools we discussed here to investigate
+ledger determinism. We
+hope to formulate a local, as opposed to trace-based, characterization of determinism,
+as well as characterize transaction validity in deterministic ledgers.
+
+% Other future work includes describing and identifying properties of ledger states
+% which can be expressed as partial categorical products of substates, and the related
+% notion of threads.
+% In the category of all ledgers, the structure and properties of morphisms is also of interest.
+% Another future research direction is the further study of differentiation
+% of transaction application in terms of how imposing various
+% constraints on derivatives affects the determinism of ledger updates.
+% Finally, we also plan to use group-theoretic
+% tactics to further study the structure of the ledger monoid.

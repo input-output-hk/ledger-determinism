@@ -1,0 +1,173 @@
+\section{Update-deterministic ledgers}
+\label{sec:update}
+
+Determinism, both state- and order- (SD and OD, for short), specifies what it means for a ledger to behave
+predictably under an update caused by a transaction in the face of a lack of information about
+what the state might be at any given time, or what transactions happen to have
+been processed before the transaction doing the update in question.
+This approach to specifying determinism focuses on allowing only certain transactions
+to be processed.
+
+Here we propose another angle from which to investigate determinism,
+which instead focuses on the properties of the $\ups$ function itself, as well
+as the state and transaction structure.
+
+A ledger $L$ is \emph{without inverses} whenever
+
+  \[ \forall~lts~s,~(s~\var{lts})~=~s~\Leftrightarrow~\var{lts}~=~[] \]
+
+If a ledger has replay protection, it is without inverses.
+Replay protection precludes inverses, since having
+inverses implies that applying a list of transactions is possible more than once,
+
+\[ (s~\var{lts}~\var{lts})~=~(s~\var{lts})~=~s \]
+
+A ledger $L$ is \emph{update-deterministic} (or, UD) whenever it has
+\emph{consistent transaction application}, defined in Figure \ref{fig:consistent}
+
+\begin{figure*}[htb]
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+    \fun{updateDetConstraint}_L ~=~ & \forall~s~tx~tx',~\\
+    & ~~~~ (\Err~\neq~(s~\var{tx})~=~(s~\var{tx'})~\neq~\Err~\Rightarrow~\\
+    & ~~~~\forall~s',~(s'~\var{tx})~\neq~\Err~\neq~(s'~\var{tx'}) \\
+    & ~~~~~~~~\Rightarrow~(s'~\var{tx})~=~(s'~\var{tx'}))
+    \end{array}
+  \end{equation*}
+  \caption{Consistent transaction application}
+  \label{fig:consistent}
+\end{figure*}
+
+
+\begin{theorem}
+  If a ledger $L$ is order-deterministic, it is update-deterministic.
+\end{theorem}
+
+\begin{proof}
+   \todopv{Prove this! I think it's true}
+\end{proof}
+
+UD is a weaker condition. It captures the idea that while the transaction order
+cannot be changed, there are no additional transaction application computations done
+using the order (see example (i) and (ii) below). In a sense, some order-dependent
+internal indexing takes place when a transaction is applied. If this indexing is not
+later inspected by other computations on-chain, there is no issue. However, building
+applications than do inspect this indexing data off-chain is bad.
+
+This definition is also representative of the idea that state-determinism attempted to
+capture (but ended up defaulting to OD), that a list of transactions makes the same changes to the ledger no matter
+what state they are applied to.
+
+\todopv{Give example of pointer addresses on Cardano. The process of building the map
+of pointer addresses as transactions update the delegations map could itself be
+UD (it is just an internal indexing process), but we notice that in fact, reward
+calculations are done using this pointer address
+map, so UD is broken.}
+
+\textbf{Examples : } \\
+
+\begin{itemize}
+  \item[(i)] $\Tx~ = ~\N$, $\State~ = ~[\N]$, and the update function appends the number in a $tx$ to the list. This ledger
+  is update-deterministic.
+
+  \item[(ii)] $\Tx~ = ~\N$, $\State~ = ~{~ n~\in~\N~}^*$, where the update function includes the number in the $tx$ in the multiset
+  (${...}^*$ is the notation for multiset). This ledger is OD
+
+  \item[(iii)] $\Tx~ = ~\Bool$, $\State~ = ~\Bool$, where the $tx$ flips the bit in the state if they match. This ledger is not
+  deterministic.
+
+  \item[(iv)] $\Tx~ = ~\Bool$, $\State~ = ~\Bool$, where the update function is XOR. This ledger is OD (and so, probably UD),
+  but has inverses.
+\end{itemize}
+
+\subsection{UD and derivatives}
+
+Recall that in Section \ref{sec:od-sd-d} we discussed the relation between derivation
+in the ledger and OD. We can also make a claims about UD and derivation.
+
+\textbf{Claim : } A derivative of a UD ledger must be independent of the state,
+but can still depend on the set of changes $ds$ applied before or after the
+transaction list $txs$, of which we are calculating the derivative.
+Recall the constraint on valid derivatives (using shorthand notation) :
+
+\[ \fun{derivativeConstraint} ~\in~ \forall~s~ds~txs, \]
+
+\[ ~((s~ds)~txs)~\neq~\Err~\neq~((s~txs) ~(txs ~s~ ds)')~\Rightarrow~((s~ds)~txs)~=~((s~txs) ~(txs ~s~ ds)') \]
+
+The $\fun{updateDetConstraint}_L$ then tells us that
+
+\[ \forall~s_1~s_2,~ (s~(txs~++~(txs~s_1~ds)'))~=~(s~(txs~++~(txs~s_2~ds)')) \]
+
+And therefore the derivative $(txs~s~ds)'$ must not be dependent on $s$.
+
+\todopv{can we say anything about this in the other direction? ie. derivative is
+independed of s implies ... ?}
+
+
+\subsection{Implementation of an OD $\ups$ function}
+
+\todopv{clean this up!!}
+
+This section we consider only ledgers that can be represented as partial products, ie.
+products $P~\times~Q$ that have functions into them from some type $R$
+
+\[ \langle~\fun{p},~\fun{q}~\rangle~:~R~\to~P~\times~Q \]
+
+return $\Err$ whenever \emph{either} $\fun{p}$ \emph{or} $\fun{q}$ returns $\Err$,
+as well as possibly in other cases.
+
+For example, the UTxO set is (maybe?) isomorphic to a (probably finite) product of Maybe-outputs,
+where each element of the product object looks like $(o_1~,~ .... ,~ o_k)$, where each spot in the
+tuple corresponds to an input.
+
+We conjecture that ledgers that have a partial product decomposition such that
+the $\ups$ function can be expressed as a \emph{projection} are OD, so that
+
+\[ \ups ~=~\pi_{TxS} \]
+
+Note that this does not mean that this is simply a projection onto the second
+coordinate. It rather means that all data needed to construct the
+new state is stored in either the old state or transaction, and no computation outside
+of projection is allowed.
+
+Projections commute (except when $\Err$ occurs).
+
+% inputs \in \Pi_{i~\in~\type{InputType}}, outputs
+%
+% inputs |-> outputs
+%
+% pi_{TxS} ((inputs_tx, outputs_tx), inputs |-> outputs) = \Pi_{i~\in~(inputs ~\setminus~ inputs_tx)} \pi
+%
+
+If we have transaction
+
+\[ tx = (inputs~=~(txid, 1),~(txid, 2);~outputs~=~(txout_1,~txout_2)) \]
+
+\begin{figure*}[htb]
+  \emph{Projections}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~:~}l@{~~}ll}
+    \pi_{TxS} & (\Tx,~\State) \to \State  \\
+    & \text{projects data that will be in the state after applying $\ups$ }
+    \end{array}
+  \end{equation*}
+  \emph{UTxO example}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l}
+      & txid_1 & txid_2 & txid_3 & ...\text{all possible $txid$s}... & txid_k   \\
+      & v_1 & \Nt & v_3 & ...\text{values corresponding to above $txid$s}... & \Nt   \\
+    \end{array}
+  \end{equation*}
+  \emph{View of UTxO by tx}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l@{~~}l}
+    & txid_1 & txid_2~(=~(txid, 1)) & txid_3~=(~(txin_1)) & ...\text{all possible $txid$s}... & txid_k~(=~(txid, 2))   \\
+    & v_1 & txout_1 & v_3 & ...\text{values corresponding to above $txid$s}... & txout_2
+    \end{array}
+  \end{equation*}
+  \caption{Transaction and state composition of OD ledgers}
+  \label{fig:ud-comp}
+\end{figure*}

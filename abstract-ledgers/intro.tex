@@ -1,0 +1,34 @@
+\section{Introduction}
+\label{sec:intro}
+
+In the context of blockchain transaction processing and smart contract execution,
+determinism is usually taken to mean something like "the ability to predict locally,
+before submitting a transaction, the on-chain result of processing that transaction and its scripts".
+This is an important aspect of ledger design because users care about being able to accurately predict
+fees they will be charged, rewards they will receive from staking, outcomes of
+smart contract executions, etc. before submitting transactions. The purpose of this
+work is to formalize this property of ledgers, and study the constraints under
+which it can be guaranteed, thereby providing analysis tools and design principles for building ledgers
+whose transaction processing outcomes can be accurately forecast.
+
+Blockchain ledger and consensus design relies on the definition of the transaction processing function
+itself being entirely deterministic. The impossibility of predicting
+the exact on-chain state transactions will be applied to, however, is due to
+unpredictable network propagation of transactions, resulting in an arbitrary
+order in which they are processed as the source of non-determinism. Determinism
+can, therefore, be formulated entirely in the language of transaction application commutativity,
+but we retain the commonly used blockchain terminology in this work.
+
+We present an abstract
+ledger model capturing the architectural core shared by most blockchain platforms:
+a ledger is a state transition system, with valid transactions (or blocks) as the only transitions.
+We then formalize the definition of determinism in terms of this abstract functional
+specification of ledger structure, and use mathematical tools
+for analyzing them in order is to establish a way to reason about
+conditions under which the transaction order has no effect on the resulting state
+or parts thereof.
+
+A similar construction to our ledger definition is presented in \cite{paxos}.
+However, the focus there is on the ordering of state updates
+to optimize the execution of a particular consensus algorithm.
+Another related study of commutativity of state transitions is ~\cite{commautomata}.

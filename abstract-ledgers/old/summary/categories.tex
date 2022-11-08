@@ -1,0 +1,41 @@
+\section{Categories of Ledgers}
+\label{sec:cats}
+
+\subsection{Categories of ledgers}
+
+There are different ways to consider categories of ledgers.
+
+\textbf{Single-ledger category $\type{SLC}_L$.} The first category we look at
+is, for a given ledger $L~\in~\LS$ the category with a single object,
+$\type{ValSt}_L$, and lists of transactions $\seqof{\type{Tx}_L}$.
+The empty list is the identity function in the category, and composition of
+functions is list concatenation. To calculate the result of applying
+a list of transactions to a valid state, $\fun{validUpdate}_L$ is used.
+
+Given any transaction type $\Tx_{list}$, we can define $\type{SLC}_{list}$ by
+
+\[ \State_{list} \leteq [\Tx_{list}] \]
+\[ \fun{initState}_{list} \leteq [] \]
+\[ \ups~s~tx~\leteq~s++tx \]
+
+We can then define a free-forgetful adjunction for any category $\type{SLC}_L$ where
+$\Tx_L = \Tx_{list}$.
+
+\todopv{specify this! is this even right?}
+
+\textbf{Category of all ledgers $\type{LED}$.} We may also consider the category of all
+ledgers, where each object is given by a ledger specification $L~\in~\LS$, ie.
+
+\[ (\type{Tx}_L,~\type{State}_L,~\ups_L,~\fun{initState}_L) \]
+
+And the maps between ledgers $\fun{f}~\in~\fun{hom}~(L,~K),~L,~K~\in~\LS$ are ones that
+and preserve $\ups_L$ and $\fun{initState}_L$, so
+
+\[ \fun{f}~(\ups_L~tx_L~s_L)~=~\ups_K~(\fun{f}~tx_L)~(\fun{f}~s_L) \]
+
+\[ \fun{f}~\fun{initState}_L~=~\fun{initState}_K \]
+
+The initial object in this category is the ledger $I$, which has one valid state $initS$,
+and $\Tx_I \leteq \{~\}$. This is also the final object.
+
+\todopv{is this right?}

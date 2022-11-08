@@ -1,0 +1,47 @@
+\begin{thebibliography}{1}
+
+\bibitem{commautomata}
+Florian Bridoux, Maximilien Gadouleau, and Guillaume Theyssier.
+\newblock {Commutative automata networks}.
+\newblock In Hector Zenil, editor, {\em {26th International Workshop on
+  Cellular Automata and Discrete Complex Systems (AUTOMATA)}}, volume
+  LNCS-12286 of {\em Cellular Automata and Discrete Complex Systems}, pages
+  43--58, Stockholm, Sweden, August 2020. {Springer International Publishing}.
+\newblock URL: \url{https://hal.archives-ouvertes.fr/hal-02548573}, \href
+  {https://doi.org/10.1007/978-3-030-61588-8\_4}
+  {\path{doi:10.1007/978-3-030-61588-8\_4}}.
+
+\bibitem{incremental}
+Yufei Cai, Paolo~G. Giarrusso, Tillmann Rendel, and Klaus Ostermann.
+\newblock A theory of changes for higher-order languages: incrementalizing
+  {\(\lambda\)}-calculi by static differentiation.
+\newblock In Michael F.~P. O'Boyle and Keshav Pingali, editors, {\em {ACM}
+  {SIGPLAN} Conference on Programming Language Design and Implementation,
+  {PLDI} '14, Edinburgh, United Kingdom - June 09 - 11, 2014}, pages 145--155.
+  {ACM}, 2014.
+\newblock \href {https://doi.org/10.1145/2594291.2594304}
+  {\path{doi:10.1145/2594291.2594304}}.
+
+\bibitem{eutxo}
+Manuel M.~T. Chakravarty, James Chapman, Kenneth MacKenzie, Orestis Melkonian,
+  Michael~Peyton Jones, and Philip Wadler.
+\newblock The extended {UTXO} model.
+\newblock In {\em Financial Cryptography and Data Security - {FC} 2020
+  International Workshops, AsiaUSEC, CoDeFi, VOTING, and WTSC, Kota Kinabalu,
+  Malaysia, February 14, 2020, Revised Selected Papers}, volume 12063 of {\em
+  LNCS}, pages 525--539. Springer, 2020.
+
+\bibitem{paxos}
+Leslie Lamport.
+\newblock Generalized consensus and paxos.
+\newblock 2005.
+
+\bibitem{alonzo}
+Polina Vinogradova and Andre Knispel.
+\newblock A formal specification of the {Cardano} ledger integrating plutus
+  core.
+\newblock Technical report, IOG, 2021.
+\newblock Available at
+  \url{https://hydra.iohk.io/build/14336115/download/1/alonzo-changes.pdf}.
+
+\end{thebibliography}

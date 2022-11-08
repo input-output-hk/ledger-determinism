@@ -1,0 +1,31 @@
+\section{Assumptions, simplifications, and limitations. }
+We present a ledger API that $\Tx$ to denote the state transitions
+of the system for the reason that we make the assumption that most users are concerned with
+application of transactions to the ledger state. However, in practice,
+an atomic update of a blockchain's state is a block. Blocks update state data
+that transactions often do not inspect, such as the hash of the previous block.
+The notion of threads lets us formalize the relation between
+block-based and transactions-based updates. The implications of this statement,
+as well as the special properties of block application, which will be part of future work.
+
+Our abstract model is constructed as an API which reflects the simplifying
+assumption that there is exactly one way to interface with a ledger --- by applying
+a transition of the transition type. This is the case for most users in most circumstances of normal
+blockchain operation. Note here that our model is strictly functional, so that we
+assume that the program processing
+and applying transactions (blocks) to the ledger does not itself
+exhibit non-deterministic behaviour. We also make the assumption that the update function
+does not evolve in any way.
+
+\section{Future work. }
+As part of future and ongoing work, we intend to continue using mathematical
+tools for investigating structure relevant to the study of
+ledger and determinism thereof. In particular,
+we focus on describing and identifying properties of ledger states
+which can be expressed as partial categorical products of substates, and the related
+notion of threads. In the category of all ledgers, properties
+and structure of the maps are also of interest.
+Another future research direction is the further study of differentiation
+of transaction application, in terms of the implications for determinism of the different
+constraints on derivatives. Finally, we also plan to use the group-theoretic
+tactics to further study the structure of the ledger monoid.

@@ -1,0 +1,330 @@
+\documentclass[runningheads]{llncs}
+
+% correct bad hyphenation here
+\hyphenation{}
+
+%\usepackage{natbib}
+\usepackage{url}
+
+% *** MATHS PACKAGES ***
+%
+\usepackage[cmex10]{amsmath}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+%\usepackage{amsthm}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{iohk}
+\usepackage{microtype}
+\usepackage{mathpazo} % nice fonts
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{latexsym}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{extarrows}
+\usepackage{slashed}
+\usepackage[unicode=true,pdftex,pdfa,colorlinks=true]{hyperref}
+\usepackage{xcolor}
+\usepackage[capitalise,noabbrev,nameinlink]{cleveref}
+\usepackage{float}
+\usepackage{upgreek,textgreek}
+
+% *** ALIGNMENT PACKAGES ***
+%
+\usepackage{array}
+\usepackage{float}  %% Try to improve placement of figures.  Doesn't work well with subcaption package.
+\usepackage{subcaption}
+\usepackage{caption}
+
+\usepackage{subfiles}
+\usepackage{geometry}
+\usepackage{listings}
+% \usepackage[dvipsnames]{xcolor}
+\usepackage{verbatim}
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape
+}
+\usepackage{alltt}
+\usepackage{paralist}
+
+\usepackage{todonotes}
+%\usepackage[disable]{todonotes}
+
+% This has to go at the end of the packages.
+%\usepackage[colorlinks=true,linkcolor=MidnightBlue,citecolor=ForestGreen,urlcolor=Plum]{hyperref}
+
+% Stuff for splitting figures over page breaks
+%\DeclareCaptionLabelFormat{continued}{#1~#2 (Continued)}
+%\captionsetup[ContinuedFloat]{labelformat=continued}
+
+% *** MACROS ***
+
+%\newcommand\coqRepo{https://github.com/input-output-hk/state-machine-research/tree/master/Abstract%20Ledger%20Specification}
+
+\newcommand{\todochak}[1]{\todo[inline,color=purple!40,author=chak]{#1}}
+\newcommand{\todompj}[1]{\todo[inline,color=yellow!40,author=Michael]{#1}}
+\newcommand{\todokwxm}[1]{\todo[inline,color=blue!20,author=kwxm]{#1}}
+\newcommand{\todopv}[1]{\todo[inline,color=purple!40,author=Polina]{#1}}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\redfootnote}[1]{\red{\footnote{\red{#1}}}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\bluefootnote}[1]{\blue{\footnote{\blue{#1}}}}
+
+%% A version of ^{\prime} for use in text mode
+\makeatletter
+\DeclareTextCommand{\textprime}{\encodingdefault}{%
+  \mbox{$\m@th'\kern-\scriptspace$}%
+}
+\makeatother
+
+\newcommand{\code}{\texttt}
+\renewcommand{\i}{\textit}  % Just to speed up typing: replace these in the final version
+\renewcommand{\t}{\texttt}  % Just to speed up typing: replace these in the final version
+\newcommand{\s}{\textsf}  % Just to speed up typing: replace these in the final version
+\newcommand{\msf}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\mi}[1]{\ensuremath{\mathit{#1}}}
+
+%% A figure with rules above and below.
+\newcommand\rfskip{3pt}
+%\newenvironment{ruledfigure}[1]{\begin{figure}[#1]\hrule\vspace{\rfskip}}{\vspace{\rfskip}\hrule\end{figure}}
+\newenvironment{ruledfigure}[1]{\begin{figure}[#1]}{\end{figure}}
+
+%% Various text macros
+\newcommand{\true}{\textsf{true}}
+\newcommand{\false}{\textsf{false}}
+
+\newcommand{\hash}[1]{\ensuremath{#1^{\#}}}
+
+\newcommand\mapsTo{\ensuremath{\mapsto}}
+\newcommand\cL{\ensuremath{\{}}
+\newcommand\cR{\ensuremath{\}}}
+
+\newcommand{\List}[1]{\ensuremath{\s{List}[#1]}}
+\newcommand{\Set}[1]{\ensuremath{\s{Set}[#1]}}
+\newcommand{\FinSet}[1]{\ensuremath{\s{FinSet}[#1]}}
+\newcommand{\Interval}[1]{\ensuremath{\s{Interval}[#1]}}
+\newcommand{\FinSup}[2]{\ensuremath{\s{FinSup}[#1,\linebreak[0]#2]}}
+% ^ \linebeak is to avoid a bad line break when we talk about finite
+% maps.  We may be able to remove it in the final version.
+\newcommand{\supp}{\msf{supp}}
+
+\newcommand{\FPScript}{\ensuremath{\s{Script}}}
+\newcommand{\Script}{\FPScript}
+\newcommand{\scriptAddr}{\msf{scriptAddr}}
+\newcommand{\ctx}{\ensuremath{\s{Context}}}
+\newcommand{\toData}{\ensuremath{\s{toData}}}
+\newcommand{\fromData}{\msf{fromData}}
+
+\newcommand{\verify}{\msf{verify}}
+
+\newcommand{\mkContext}{\ensuremath{\s{mkContext}}}
+
+\newcommand{\applyScript}[1]{\ensuremath{\llbracket#1\rrbracket}}
+
+% Macros for eutxo things.
+\newcommand{\tx}{\mi{tx}}
+\newcommand{\TxId}{\ensuremath{\s{TxId}}}
+\newcommand{\txId}{\msf{txId}}
+\newcommand{\txrefid}{\mi{id}}
+\newcommand{\Address}{\ensuremath{\s{Address}}}
+\newcommand{\DataHash}{\ensuremath{\s{DataHash}}}
+\newcommand{\hashData}{\msf{dataHash}}
+\newcommand{\idx}{\mi{index}}
+\newcommand{\inputs}{\mi{inputs}}
+\newcommand{\outputs}{\mi{outputs}}
+\newcommand{\validityInterval}{\mi{validityInterval}}
+\newcommand{\scripts}{\mi{scripts}}
+\newcommand{\forge}{\mi{forge}}
+\newcommand{\sigs}{\mi{sigs}}
+\newcommand{\fee}{\mi{fee}}
+\newcommand{\addr}{\mi{addr}}
+\newcommand{\pubkey}{\mi{pubkey}}
+\newcommand{\val}{\mi{value}}  %% \value is already defined
+\newcommand{\Value}{\type{Value}}  %% \value is already defined
+
+\newcommand{\validator}{\mi{validator}}
+\newcommand{\redeemer}{\mi{redeemer}}
+\newcommand{\datum}{\mi{datum}}
+\newcommand{\datumHash}{\mi{datumHash}}
+\newcommand{\datumWits}{\mi{datumWitnesses}}
+\newcommand{\Data}{\ensuremath{\s{Data}}}
+\newcommand{\Input}{\ensuremath{\s{Input}}}
+\newcommand{\Output}{\ensuremath{\s{Output}}}
+\newcommand{\OutputRef}{\ensuremath{\s{OutputRef}}}
+\newcommand{\Signature}{\ensuremath{\s{Signature}}}
+\newcommand{\Ledger}{\ensuremath{\s{Ledger}}}
+
+\newcommand{\outputref}{\mi{outputRef}}
+\newcommand{\txin}{\mi{in}}
+\newcommand{\id}{\mi{id}}
+\newcommand{\lookupTx}{\msf{lookupTx}}
+\newcommand{\getSpent}{\msf{getSpentOutput}}
+
+\newcommand{\consumes}[1]{\msf{consumes(#1)}}
+\newcommand{\consumesOne}[1]{\msf{consumesOne(#1)}}
+\newcommand{\cid}{\mi{cid}}
+\newcommand{\inputValue}{\mi{inputValue}}
+\newcommand{\rMin}{r_{\mi{min}}}
+\newcommand{\rMax}{r_{\mi{max}}}
+
+\newcommand{\Tick}{\ensuremath{\s{Tick}}}
+\newcommand{\currentTick}{\msf{currentTick}}
+\newcommand{\spent}{\msf{spentOutputs}}
+\newcommand{\unspent}{\msf{unspentOutputs}}
+\newcommand{\txunspent}{\msf{unspentTxOutputs}}
+\newcommand{\utxotx}{\msf{Tx}}
+
+\newcommand{\Quantity}{\ensuremath{\s{Quantity}}}
+\newcommand{\Asset}{\ensuremath{\s{Asset}}}
+\newcommand{\Policy}{\ensuremath{\s{PolicyID}}}
+\newcommand{\Quantities}{\ensuremath{\s{Quantities}}}
+\newcommand{\nativeCur}{\ensuremath{\mathrm{nativeC}}}
+\newcommand{\nativeTok}{\ensuremath{\mathrm{nativeT}}}
+
+\newcommand{\PublicKey}{\ensuremath{\s{PubKey}}}
+\newcommand{\PrivateKey}{\ensuremath{\s{PrivateKey}}}
+
+\newcommand{\pkey}{\ensuremath{\pi_{\mathsf{p}}}}
+\newcommand{\skey}{\ensuremath{\pi_{\mathsf{s}}}}
+
+\newcommand\B{\ensuremath{\mathbb{B}}}
+\newcommand\N{\ensuremath{\mathbb{N}}}
+\newcommand\Z{\ensuremath{\mathbb{Z}}}
+\renewcommand\H{\ensuremath{\mathbb{H}}}
+%% \H is usually the Hungarian double acute accent
+\newcommand{\emptyBs}{\ensuremath{\emptyset}}
+\newcommand{\leteq}{\ensuremath{\mathrel{\mathop:}=}}
+\newcommand{\Nt}{\ensuremath{\Diamond}}
+\newcommand{\Bool}{\type{Bool}}
+\newcommand{\Type}{\type{Type}}
+\newcommand{\Diff}{\type{Diff}}
+\newcommand{\ValSt}{\type{ValSt}}
+\newcommand{\Block}{\type{Block}}
+
+%ledger spec commands
+\newcommand{\LS}{\mathcal{L}\mathcal{S}}
+\newcommand{\State}{\type{State}}
+\newcommand{\Tx}{\type{Tx}}
+\newcommand{\ID}{\type{ID}}
+\newcommand{\Th}{\mathcal{T}}
+\newcommand{\Tu}{\mathcal{U}}
+\newcommand{\T}{\type{T}}
+\newcommand{\Err}{\type{Err}}
+\newcommand{\DCat}{\type{DCat}}
+\newcommand{\ups}{\fun{update}}
+\newcommand{\Time}{\type{Time}}
+\newcommand{\True}{\type{True}}
+\newcommand{\False}{\type{False}}
+
+
+\usepackage{etoolbox}
+
+% For anonymisation
+\newtoggle{anonymous}
+\toggletrue{anonymous}
+\iftoggle{anonymous}{
+  \newcommand{\Cardano}{CHAIN}
+  \newcommand{\Plutus}{LANG}
+}{
+  \newcommand{\Cardano}{Cardano}
+  \newcommand{\Plutus}{Plutus Core}
+}
+
+% Names, for consistency
+\newcommand{\UTxO}{\type{UTxO}}
+\newcommand{\Slot}{\type{Slot}}
+\newcommand{\Block}{\type{Block}}
+\newcommand{\UTXOma}{UTXO$_{\textsf{ma}}$}
+\newcommand{\EUTXO}{E\UTXO{}}
+\newcommand{\ExUTXO}{Extended \UTXO{}}
+\newcommand{\CEM}{CEM}
+
+% relaxed float placement
+\renewcommand{\topfraction}{.95}
+\renewcommand{\bottomfraction}{.7}
+\renewcommand{\textfraction}{.15}
+\renewcommand{\floatpagefraction}{.66}
+\renewcommand{\dbltopfraction}{.66}
+\renewcommand{\dblfloatpagefraction}{.66}
+\setcounter{topnumber}{9}
+\setcounter{bottomnumber}{9}
+\setcounter{totalnumber}{20}
+\setcounter{dbltopnumber}{9}
+
+%\newtheorem{theorem}{Theorem}[theorem]
+
+%% ------------- Start of document ------------- %%
+
+\begin{document}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+\title{Abstract Ledger Specifications}
+%\title{\UTXOma: \UTXO\ with Multi-Asset Support\\ --- DRAFT --- DRAFT ---}
+
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+
+\author{
+  Polina Vinogradova\inst{1}
+  \and
+  IOG folk
+  \and
+  Univerity of Edinburgh folk
+}
+
+\authorrunning{IOG and UofE folk}
+%\authorrunning{--- DRAFT --- DRAFT --- DRAFT ---}
+
+\institute{
+  IOG,
+  \email{firstname.lastname@iohk.io}
+  \and
+  University of Edinburgh,
+  \email{orestis.melkonian@ed.ac.uk, wadler@inf.ed.ac.uk}
+}
+
+\maketitle
+
+
+\begin{abstract}
+
+Ensuring deterministic behaviour in distributed blockchain ledger design matters to end users because
+it allows for locally predictable fees and smart contract evaluation outcomes.
+In this work we begin by establishing a formal definition of an abstract ledger together with
+a ledger update procedure. We use this model as a basis for formalizing and studying
+several definitions of the collection of properties colloquially classified as
+determinism. We investigate the relations between these properties, and the implications
+each of these has for design and static analysis of ledgers, giving simple but
+illustrative examples of ledgers with and without these properties.
+We discuss how these ideas can be applied to realistic, deployable ledger
+design and architecture.
+
+
+
+\end{abstract}
+
+\keywords{blockchain \and formal methods \and ledger}
+
+\input{intro.tex}
+\input{model.tex}
+\input{categories.tex}
+\input{determinism.tex}
+\input{reversible.tex}
+%\input{multiset.tex}
+\input{threads.tex}
+\input{blockchain.tex}
+
+\bibliographystyle{splncs04}
+\bibliography{abstract-ledgers}
+
+\end{document}

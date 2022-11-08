@@ -1,0 +1,67 @@
+\section{The abstract ledger model and determinism. }
+\label{sec:the-model}
+A ledger $L$ is defined by its state type $\State_L$, transaction
+type $\Tx_L$, initial state $\fun{initState}_L~:~\type{State}_L$,
+and a state update function $ups_L~:~\type{Tx}_L~\to~\type{State}_L~\to~(\type{State}_L)_{\Err}$.
+
+When a $tx$ is not valid in a state $s$, $\ups_L~tx~s~=~\Err$.
+A valid ledger state is one that is the result
+of applying a sequence of transactions to the initial state that do not
+produce $\Err$. This conception of a valid on-chain state implies that any difference between
+local and on-chain state is the result of a different sequence of transctions
+having been applied in each case.
+
+We present a weaker and a stronger definition of determinism. The stronger definition,
+which we call order-determinism (OD), says that
+any two permutations of a list of transactions must produce the same state when
+applied to a give valid state, unless one (or both) of them produces an $\Err$.
+The weaker definition, called update-determinism (UD), requires that if two transactions produce the same state
+when applied to a valid state, they must also produce the same state when applied
+to any other valid state. We conjecture that the weaker constraint is a consequence of
+the stronger one.
+
+\section{Mathematical models of abstract ledgers. }
+\label{sec:math}
+
+An important part of future and ongoing determinism research is the application of
+mathematical tools and constructs to characterize determinism in ledgers.
+We define two categories that model ledgers. One is a one-object category of all valid states
+as well as $\Err$, with the maps in the category being specified by the transactions.
+The second one is a category of all ledgers, together with all maps between them that preserve the initial
+state and update function. We also define a free, finitely generated monoid whose
+underlying set, for a given ledger, is all dependent pairs of a lists of transactions
+and corresponding states computed by the $\ups$ function.
+
+Theory of changes (ToC) \cite{incremental} is a framework for defining differentiation
+on changes to data structures. We adjust this formalism to partial functions so that
+it can be employed in the context of ledgers and ledger updates.
+A notion of a type representing a change
+set is difficult to define while remaining agnostic of the specific data structure, however,
+we observe that sets of ledger changes (i.e. $\Diff_L$ type) correspond exactly to transactions,
+and $\ups$ is a function that applies those changes.
+We use this as a tool for formalizing the colloquial non-determinism definition,
+and present a proof that it is equivalent to OD. We then also
+use this differentiation formalism to analyze the update-determinism.
+
+So far, our reasoning has been agnostic of the content and structure of ledger
+states. In many cases, specific parts of the ledger are of interest for the
+study of determinism, such as an account or smart contract state. We introduce
+the concept of threads to formalize what we mean by ledger parts, as well
+as define what it means for an individual thread to be deterministic.
+We show that all threads must be OD in an OD ledger.
+
+
+\section{Examples. }
+\label{sec:examples}
+
+We can apply the tools for ledger analysys discussed above to an existing ledger ---
+the Cardano ledger with smart contract integration \cite{alonzo}.
+We note that a component, called pointer addresses,
+of the ledger is a thread with an UP, but not OD update
+procedure. The $\ups$ function, then, uses the ledger data generated during pointer
+computation to perform stake distribution calculations require OD of their
+components to maintain OD of the ledger as a whole.
+
+On the other hand, smart contracts implementing state machines \cite{eutxo-ma} constitute threads,
+which have indeed been shown to be deterministic \cite{alonzo}. Work remains to formally demonstrate
+that the two definitions of determinism for smart contracts align.

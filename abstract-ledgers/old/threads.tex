@@ -1,0 +1,164 @@
+\section{Threads}
+\label{sec:threads}
+
+We can identify a particular kind of a lens-like structure which may arise in a ledger specification,
+which we call a \emph{thread}, and denote $T \in \Th$. More specifically,
+
+\begin{definition}
+  A \emph{thread} $T \in \Th$ in a ledger specification $L$ is a tuple of
+  \begin{itemize}
+    \item[(i)] an underlying type $T$,
+
+    \item[(ii)] a projection function
+    \[ \fun{proj}_T ~\in~\type{State}_L \to T^? \]
+
+    That is surjective, with a right inverse $\fun{inj}_T$ :
+
+    \[ \fun{proj}_T~\circ~\fun{inj}_T ~=~\fun{id}_{T^?} \]
+
+    \item[(iii)] an update function $\fun{updateT}_T$ is such that
+    for all $tx,~s$,
+
+    \[ \fun{updateT}_T~tx~s~(\fun{proj}_T~s) = \Err~ \Rightarrow~ \ups~tx~s~=~ \Err \]
+
+    If $\ups~tx~s~\neq~ \Err$,
+
+    \[ \fun{updateT}_T~tx~s~(\fun{proj}_T~s) = \fun{proj}_T~(\ups~tx~s)\]
+  \end{itemize}
+\end{definition}
+
+Note that the projection function is not from a valid state, but rather from an
+arbitrary state. This function can be extended to a map between dependent types :
+
+\[ \fun{depProj}_T ~\in~\type{State}_L \to T_{val} \]
+
+where
+
+\[ T_{val}~\leteq~\{ ~(s,~t)~ \mid~\fun{proj}_T~s~=~t~\wedge~s~\in~\type{ValSt}_L~ \} \]
+
+Note also that the projection function may return $\Nt$, which implies that all threads
+in a ledger are non-persistent. While this is not true for most realistic ledgers
+(eg. the UTxO set thread always exists on the ledger, even if it is empty), a ledger specification may
+restrict the collection of valid states to only those where persistent threads
+are never projected to $\Nt$.
+
+The function $\fun{updateT}$ which applies a transaction-state pair to a $t \in T$
+is defined in terms of the $\ups$ function in Figure \ref{fig:threads}.
+
+Recall the one-object category than the one-object category $\type{SLC}_L$.
+
+We construct the category as follows :
+
+
+
+ where each $v \in T$ is an image of some $s \in S$.
+  and the hom-set of $T \to T$ is given by pairs of type $(\type{ValSt}_{L},~\seqof{(\type{Tx}_{L})})$.
+
+  The update function used to apply a list of transactions $(s,~txs)$ is given by
+  folding $\fun{updateT}$ over $txs$ at $s$.
+  That is, maps in this category are specified by both the transactions being applied to the ledger,
+  as well as the ledger state itself.
+
+  \todopv{Can we do pointed pairs here (i.e. $(t, s)$) instead as objects, rather than just the thread?}
+
+
+Note here that the implication is one direction --- if the $\fun{updateT'}_T$
+does not produce an error, the $\ups$ function can still produce an error applied
+to the same transaction and state. That is, intuitively, a thread update function
+only cares that the transaction is attempting to
+update the thread data badly, and not about what it does to the rest of the ledger.
+
+Since a $\Err$ in the output of the $\fun{updateT'}_T$ function implies in an error
+in the $\ups$ function applied to the same state and transaction,
+$\fun{updateT'}_T$ is said to \emph{emit constraints} on the ledger update
+function.
+
+
+
+If we consider individual stateful smart contracts as threads, we again see that
+the update of the total UTxO set (or the account-based ledger's state) require
+that some general rules must be satisfied, while each smart contract will
+have its own constraints that it may place on the transaction performing its
+state update.
+
+\begin{itemize}
+  \item[(i)] A \emph{temporary} thread $T$ is one that may not appear in some valid ledger
+  states of a ledger specification $\type{Spec}~T = L$, i.e.
+
+  \[ \exists~~s~\in~\type{ValSt}_L,~\fun{proj}_T~s~=~\Nt \]
+
+  A permanent thread is one that is not temporary.
+
+  \item[(ii)] A \emph{stateful} thread $T$ is one where the projection function,
+  for some pair of ledger states, gives two different non-$\Nt$ outputs.
+  \[ \exists~~s,~s'~\in~\type{ValSt}_L,~\Nt~\neq~\fun{proj}_T~s~\neq~\fun{proj}_T~s'~\neq~\Nt \]
+
+  \item[(iii)] We say that the domain of a thread $T$ with the update function
+  $\fun{updateT}_T$ \emph{constrains} the
+  update of the ledger state when for some $tx$,
+
+  \[ \fun{dom}_T~(tx,~s)~\neq~\fun{id}_T \]
+
+  \item[(iv)] Threads $T$ and $U$ in a ledger specification $L~=~\type{Spec}_T~=~\type{Spec}_U$
+  are said to be \emph{independent} when any change by a transaction $tx$ to the state of both threads can
+  be instead implemented by two lists of transactions $txs1, txs2$, where
+
+  \begin{itemize}
+    \item applying the
+    list $txs1$ to the ledger state updates one of the threads to have the same state as after applying
+    $tx$ to the ledger while keeping the state of the other thread constant, and
+    \item applying the list $txs2$ to the resulting ledger state updates the state of the
+    other thread to be the same as after applying $tx$.
+  \end{itemize}
+
+  \[ \forall~tx~s~\in~\type{ValSt}_L,~~\fun{validTx}_L~tx~s~\Rightarrow~~\exists~~txs1~txs2, \]
+  \[ \fun{proj}_{T}~(\fun{updateErr}_{L}~tx~s)~=~\fun{proj}_{T}~(\fun{computeState}_L~s~(txs1++txs2)) \]
+  \[ \wedge~ \fun{proj}_{U}~(\fun{updateErr}_L~tx~s)~=~\fun{proj}_{U}~(\fun{computeState}_L~s~(txs1++txs2)) \]
+  \[ \wedge \]
+  \[ \fun{proj}_{T}~(\fun{computeState}_L~s~txs1)~=~\fun{proj}_{T}~(\fun{updateErr}_L~tx~s)  \]
+  \[ \wedge~ \fun{proj}_{U}~(\fun{computeState}_L~s~txs1)~=~\fun{proj}_{U}~s \]
+
+  \item[(iv)] Threads $T$ and $U$ in a ledger specification $L~=~\type{Spec}~T~=~\type{Spec}~U$
+  are said to be \emph{separateable by message passing} when there exist threads $T'$ and $U'$
+  such that
+  \[ \forall~tx~s~\in~\type{ValSt}_L,~~\fun{validTx}_L~tx~s \]
+  ......
+\end{itemize}
+
+\todopv{when can two dependent threads be made separable?}
+
+\subsection{Deterministic threads}
+
+\todopv{Does this work?}
+
+See Figures \ref{fig:order-thread}, \ref{fig:update-thread}. UD defined in \ref{sec:update}.
+
+\begin{figure*}[htb]
+  \emph{Order-determinism for a thread $T$ in ledger $L$}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+      \forall~(s~\in~\type{ValSt}_L)~(txs~\in~\seqof{\type{Tx}_L}),~\\
+      & ~~~~txs'~\in~\fun{Permutation}~txs,~\\
+      & ~~~~\fun{validUpdate}_L~s~txs~\neq~\Err~\neq~\fun{validUpdate}_L~s~txs' \\
+      & ~~~~\Rightarrow~~\fun{proj}_{T}~(\fun{validUpdate}_L~s~txs)~=~\fun{proj}_{T}~(\fun{validUpdate}_L~s~txs')
+    \end{array}
+  \end{equation*}
+  \caption{Order-determinism for a single thread}
+  \label{fig:order-thread}
+\end{figure*}
+
+\begin{figure*}[htb]
+  \emph{Update-determinism for a thread $T$ in ledger $L$}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+      % \forall~s~tx~tx',~\\
+      % & ~~~~ (\Err~\neq~(s~\var{tx})~=~(s~\var{tx'})~\neq~\Err~\Rightarrow~\\
+      % & ~~~~\forall~s',~(s'~\var{tx})~\neq~\Err~\neq~(s'~\var{tx'}) \\
+      % & ~~~~~~~~\Rightarrow~\fun{proj}_{T}~(s'~\var{tx})~=~\fun{proj}_{T}~(s'~\var{tx'}))
+    \end{array}
+  \end{equation*}
+  \caption{Consistent transaction application (UD) for a single thread $T$}
+  \label{fig:update-thread}
+\end{figure*}
