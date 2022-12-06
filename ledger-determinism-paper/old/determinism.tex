@@ -1,533 +1,136 @@
 \section{Deterministic Ledgers}
 \label{sec:determinism}
 
-Determinism in the context of ledgers and ledger state updates refers to the
-idea that a user has no control over the order in which submitted transactions
-will be applied to a ledger state, what the ledger state will be
-when their transactions finally get applied, or even the precise specification
-of the update that is being computed. In some cases, randomness,
-or differences in rounding or different machines, or certain kinds of
-data access can be a source of indeterminism.
+Here we give definitions of determinism and compare them.
 
-Here we attempt to make precise the sort of determinism that assumes that the
-function $\ups$ does not itself vary at all, as it would in the case of using
-different rounding strategies for computing $\ups~tx~s$ on different machines.
-Investigating this source of indeterminism will be part of future work.
+\subsection{Thread-determinism}
+\label{sec:thread-det}
 
-Here we give two definitions of determinism and compare them.
+We first introduce the most intuinitve concept of determinism in Figure \ref{fig:thread-det}.
+A ledger specification in which the $\fun{threadDeterminism}$ contraint is satisfied
+guarantees that the update of any substate of the ledger is independent of
+other data on the ledger external to the substate. That is, when a substate in a (valid)
+ledger state $s$ is updated by some transaction, it will be updated
+to the same substate in any state $s'$ where the original substate is the same as in $s$.
 
-\subsection{Order-determinism}
-\label{sec:order-det}
+We say a single thread $(\T, \pi)$ is deterministic whenever $\fun{threadDeterminism}~\T~\pi$
+holds.
+
+\todopv{this is the kind of determinism that we use in showing deterministic script validation}
+
+\textbf{Proposition. } See the \emph{Thread-determinism proposition for transaction sequences}
+in Figure \ref{fig:thread-det}.
+
+\textbf{Proof.} By induction.
+
+\begin{itemize}
+  \item[(i)] Base case, $txs = []$ :
+  \[\pi~s~=~\pi~s'~~\Rightarrow~~\pi~s~=~\pi~s' \]
+  \item[(ii)] Inductive step for $txs ++ tx$ : we assume that,
+  \[ \pi~s~=~\pi~s',~\pi~(s\odot txs)~*=~\pi~(s'\odot txs) \]
+
+  Then, by $\fun{threadDeterminism}$ at states $\pi~(s\odot txs)$ and $\pi~(s'\odot txs)$,
+
+  we conclude the result,
+  \[ \pi~(s\odot (txs ++ tx)) ~=~\pi~((s\odot txs) \odot tx) ~*=~\pi~((s'\odot txs) \odot tx)~=~\pi~(s'\odot (txs ++ tx)) \]
+\end{itemize}
 
 \begin{figure*}[htb]
-  \emph{Order-determinism constraint on a ledger specification}
+  \emph{Thread-determinism definition on a ledger specification}
   %
   \begin{equation*}
     \begin{array}{l@{~~}l@{~~}ll}
-    \fun{orderDetConstraint}_L ~=~ & \forall~(s~\in~\type{ValSt}_L)~(txs~\in~\seqof{\type{Tx}_L}),~\\
-    & ~~~~txs'~\in~\fun{Permutation}~txs,~\\
-    & ~~~~\fun{validUpdate}_L~s~txs~\neq~\Err~\neq~\fun{validUpdate}_L~s~txs' \\
-    & ~~~~\Rightarrow~~\fun{validUpdate}_L~s~txs~=~\fun{validUpdate}_L~s~txs'
+    \fun{threadDeterminism} ~=~ & \forall~\T,~\pi~\in~\State \to \T, \\
+    & ~~~~ \forall~(s,~s'~\in~\V),~t~\in~\T,~tx \in \Tx,~\pi~s~=~\pi~s', \\
+    & ~~~~ \pi~(s\odot tx)~*=~\pi~(s'\odot tx)
     \end{array}
   \end{equation*}
-  \caption{Order-determinism}
-  \label{fig:order-det}
+  \emph{Thread-determinism proposition for transaction sequences}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+    \fun{threadDeterminism} ~=~ & \forall~\T,~\pi~\in~\State \to \T, \\
+    & ~~~~ \forall~(s,~s'~\in~\V),~t~\in~\T,~txs \in [\Tx],~\pi~s~=~\pi~s', \\
+    & ~~~~ \pi~(s\odot txs)~*=~\pi~(s'\odot txs)~\\
+    \end{array}
+  \end{equation*}
+  \caption{Thread-determinism}
+  \label{fig:thread-det}
 \end{figure*}
+
+\subsection{Delta-determinism}
+\label{sec:delta-det}
+
+Delta-determinism is a constraint on a ledger specitication that guarantees that
+the changes made by a transaction sequence $txs$ to some state $s$, expressed as
+the collection of non-$\Err$ transactions that all perform the same state update,
+are the same as the changes made by $txs$ to any other state $s'$.
+
+This definition of determinism quantifies over all paths in the transition
+graph, making proving this property directly intractable.
+
+\begin{figure*}[htb]
+  \emph{State-determinism constraint on a ledger specification}
+  %
+  \begin{equation*}
+    \begin{array}{l@{~~}l@{~~}ll}
+    \fun{deltaDeterminism} ~=~ & \forall (s~s'~\in~\V)~(txs~\in~[\Tx]),~\\
+    & ~~~~ \Delta (s,~s\odot txs)~*=_{s,s'}~\Delta (s',~s'\odot txs)
+    \end{array}
+  \end{equation*}
+  \caption{State-determinism}
+  \label{fig:delta-det}
+\end{figure*}
+
+\subsection{Order-determinism}
+\label{sec:order-det}
 
 The definition in Figure \ref{fig:order-det} is given in terms of the traces leading
 to a particular ledger state. Specifically, it is concerned with the independence of the
 ledger state from the order
 of the transactions in the trace that has lead to any given state.
 
-\todopv{Randomness as a source of determinism can be accounted for in this definition - reorder
-the transactions and you get a different outcome randomly, however,
-things like mismatched rounding do not - this is a consensus-level issue?}
-
-\subsection{Stateful-determinism}
-\label{sec:state-det}
-
 \begin{figure*}[htb]
-  \emph{Arbitrary state-determinism constraint on a ledger specification}
+  \emph{Order-determinism constraint on a ledger specification}
   %
   \begin{equation*}
     \begin{array}{l@{~~}l@{~~}ll}
-    \fun{stateDetConstraint} ~=~ & \forall (s~s'~\in~\type{ValSt}_L)~(tx~\in~\type{Tx}_L),~\\
-    & ~~~~\fun{updateErr}_L~tx~s~\neq~\Err~\neq~\fun{updateErr}_L~tx~s \\
-    & ~~~~\Rightarrow~~\Delta_L~[tx]~s~=~\Delta_L~[tx]~s'
+    \fun{orderDeterminism} ~=~ & \forall~(s~\in~\V)~(txs~\in~[\Tx]),~\\
+    & ~~~~txs'~\in~\fun{Permutation}~txs,~\\
+    & ~~~~s\odot txs~\neq~\Err~\neq~s \odot~txs' \\
+    & ~~~~\Rightarrow~~s\odot txs~=~s \odot~txs'
     \end{array}
   \end{equation*}
-  \caption{State-determinism}
-  \label{fig:state-det}
+  \caption{Order-determinism}
+  \label{fig:order-det}
 \end{figure*}
 
-\todopv{make a note here about only the transaction body making the changes,
-which is a part of the tx that, if kept constant, makes the same s' from every s
-regardless of the changes to the rest of the tx (and produces Err in the same
-cases)}
 
-The definition in Figure \ref{fig:state-det} is operational, or local. It describes
-the requirement that given any valid ledger state, the change in the ledger state
-resulting from the application of a transaction to one state is, in some sense,
-the same as the change resulting from the application of that transaction to a
-different ledger state, given that in both cases, the transaction is valid.
-
-We will later specify what exactly is the function
-
-\[ \Delta_L~\in~\seqof{(\type{Tx}_L)} \to \type{ValSt}_L \to \Diff_L \]
-
-This function must express \emph{the changes that applying
-an update $txs$ to the ledger state $s$ makes}.
-What the state-determinism constraint says is that the update (or, change set)
-to the state of a state-deterministic ledger is specified uniquely by the transaction list
-$txs$ that is being applied, and is independent of the state to which it is applied in the
-case that the update is valid in that state.
-
-A definition of $\Delta_L$ making the constraint trivially true is easy to give.
-However, in order for $\Delta_L$ to carry the intended meaning, the ledger
-itself must admit a certain kind of structure, with which $\Delta_L$ indeed reduces to a
-function that simply discards its second argument and returns its first.
-
-In the general case of an arbitrary $L$, the definition of $\Delta_L$ may not have
-this property. In fact, it should be very dependent on the specific data structures
-of $\type{Tx}_L$ and $\type{State}_L$. A theory of changes and program derivatives
-is presented in \cite{changes}. We use this theory to make precise the definition of $\Delta_L$,
-and to describe the structure characteristic
-of state-deterministic ledgers that admit a trivial $\Delta_L$.
-
-\subsection{Derivative structure in single-ledger categories}
-
-This work gives a framework for defining \emph{derivatives}, where, for a given input,
-a derivative maps changes to that input directly to changes in the output.
-This approach adheres to some of the key ideas of the usual notion of differentiation
-of functions, while adapting them to programs. Other abstract notions of differentiation,
-such as presented in \cite{diffrestcats}, impose additional constraints on
-the functions being differentiated, such as the definition of addition of functions.
-The theory of changes outlined in \cite{changes} draws inspiration from an
-abstract notion of derivation to deal with changes to data structures.
-
-One noteworthy difference between the differentiation presented in the two papers is
-the type of the derivative function. A differential category derivative of a
-function $f : X \to Y$ has the type
-
-\[ \type{D}[f] : X \times X \to Y \]
-
-While the type of a derivative of a program $p : A \to B$ is
-
-\[ \fun{diff}~p : A \to \Diff~A \to \Diff~B \]
-
-The reason for this is that to define a coherent and applicable theory of changes
-to a data structure, we want to have a special type $\Diff~A$ for each
-structure $A$ that can express changes to $A$. Additional structure required
-for functional differentiation allows for a theory wherein the changes to a term of a type
-can be expressed by another term of that same type.
-
-Now that we gave some justification for discussing the type of changes to a ledger
-state, we can explore what that looks like. The change type operator, $\Diff$, introduced
-in \cite{changes}, along with its behaviour and the constraints on it, is specified in Figure \ref{fig:diff}.
-Here we tailor the definition to a single ledger specification, so that it only
-describes the change type of the ledger state type for a given ledger specification.
-
-In the work mentioned above, all functions are total, as they are applied only
-to the domains (sets) in which they are valid.
-However, in our model, the partiality of transaction application
-to the ledger state object is integral to the discussion of determinism.
-Disallowing the application of certain updates to certain states is what
-allow us to guarantee deterministic updates in the valid update cases --- so, we
-must be able to reason about the error cases.
-
-Moreover, we want to be able to discuss
-what it means for a particular category of valid ledger states and maps between them
-to enjoy differential structure even if applying certain changes to a given
-state results in a failed ($\Err$) update.
-
-For this reason, we additionally make the change that only some changes are permitted, i.e. the
-ones that lead to a valid ledger state, so that $\fun{applyDiff}$ returns
-a error-type.
-
-\begin{figure*}[htb]
-  \emph{$\Diff$ Type Accessors}
-  %
-  \begin{equation*}
-    \begin{array}{r@{~\in~}l@{~~~~}lr}
-      \type{Spec}_D
-      & \Type
-      & \text{Accessor for the type of the ledger specification}
-      \nextdef
-      \type{State}_D
-      & \Type
-      & \text{Accessor for the type of the valid ledger state, $\type{State}_D = \type{ValSt}_{\type{Spec}_D}$}
-      \nextdef
-      \Diff_D
-      & \Type
-      & \text{Accessor for the change type of the ledger state}
-    \end{array}
-  \end{equation*}
-  \emph{$\Diff$ functions}
-  %
-  \begin{equation*}
-    \begin{array}{r@{~\in~}l@{~~~~}lr}
-      \fun{applyDiff} & \type{State}_D \to \Diff_D \to \type{State}_D &
-      \text{Apply a set of changes to a given state}
-      \nextdef
-      \fun{extend} & \Diff_D \to \Diff_D \to \Diff_D &
-      \text{Compose sets of changes}
-      \nextdef
-      \fun{zero} & \Diff_D  &
-      \text{No-changes term}
-    \end{array}
-  \end{equation*}
-  \emph{$\Diff$ constraints}
-  %
-  \begin{align*}
-      & \fun{zeroChanges} ~\in~\forall~s, \fun{applyDiff}~s~\fun{zero}~=~s  \\
-      & \text{Applying the zero change set results in no changes}
-      \nextdef
-      &\fun{applyExtend} ~\in~ \forall~s~txs1~txs2,~\fun{validUpdate}~s~txs1~\neq~\Err~\neq~\fun{validUpdate}~s~txs2, \\
-      &~~~~\fun{applyDiff}~s~ (\fun{extend}~txs2~txs1)~=~\fun{applyDiff} (\fun{applyDiff}~s~txs1)~txs2 \\
-      & \text{If both change sets are valid, composing them gives the same result as applying them in sequence}
-  \end{align*}
-  \caption{Specification for a change type $D \in~\Diff$}
-  \label{fig:diff}
-\end{figure*}
-
-Now, we want to introduce the idea of taking and evaluating derivatives in
-a single-ledger category for a given ledger $L~\in~\LS$, see Figure \ref{fig:diff-cat}.
-
-\begin{figure*}[htb]
-  \emph{$\DCat$ Type Accessors}
-  %
-  \begin{equation*}
-    \begin{array}{r@{~\in~}l@{~~~~}lr}
-      \type{Spec}_{CD}
-      & \Type
-      & \text{Accessor for the type of the ledger specification}
-      \nextdef
-      \type{State}_{CD}
-      & \Type
-      & \text{Accessor for the type of the valid ledger state, $\type{State}_{CD} = \type{ValSt}_{\type{Spec}_{CD}}$}
-      \nextdef
-      \type{Diff}_{CD}
-      & \Type
-      & \text{Accessor for the $\Diff$ type of the ledger state}
-      \nextdef
-      \type{DerType}_{CD}
-      & \Type
-      & \text{Accessor for the type representing derivative functions}
-    \end{array}
-  \end{equation*}
-  \emph{$\DCat$ functions}
-  %
-  \begin{equation*}
-    \begin{array}{r@{~\in~}l@{~~~~}lr}
-      \fun{takeDer} & \seqof{(\type{Tx}_{\type{Spec}\_{CD}})} \to \type{DerType}_{CD} &
-      \text{Take the derivative of a transaction}
-      \nextdef
-      \fun{evalDer} & \type{DerType}_{CD} \to \type{State}_{CD} \to \Diff_D \to \Diff_D &
-      \text{Calculate the diff value of a derivative at $(s,~ds)$}
-    \end{array}
-  \end{equation*}
-  \emph{$\DCat$ constraints}
-  %
-  \begin{align*}
-      &\fun{derivativeConstraint} ~\in~ \forall~s~ds~txs,\\
-      &~~~~\fun{validUpdate}_L ~(\fun{applyDiff}~ ds~ s) ~txs~\neq~\Err, \\
-      &~~~~\fun{applyDiff} ~(\fun{evalDer} ~(\fun{takeDer}~ txs) ~s~ ds)~ (\fun{validUpdate}_L~ s ~txs)~\neq~\Err, \\
-      &~~~~\fun{validUpdate}_L ~(\fun{applyDiff}~ ds~ s) ~txs ~= \\
-      &~~~~~~~~ \fun{applyDiff} ~(\fun{evalDer} ~(\fun{takeDer}~ txs) ~s~ ds)~ (\fun{validUpdate}_L~ s ~txs) \\
-      & \text{If both change sets are valid, composing them gives the same result as applying them in sequence}
-  \end{align*}
-  \caption{Structure $DC~\in~\DCat$ for a data-differentiable category }
-  \label{fig:diff-cat}
-\end{figure*}
-
-\todopv{Should evalDer ever produce an Err ?? txs (ds s) = (f s ds txs) (txs s) }
-
-\subsection{Instantiating derivative structure}
-
-\begin{figure*}[htb]
-  \emph{Data-differentiable structure}
-  \begin{equation*}
-    \begin{array}{l@{~\leteq~}l@{~~~~}lr}
-      \Diff_L~&~\seqof{(\type{Tx}_L)} \\
-      \fun{applyDiff}~&~\fun{flip}~\fun{validUpdate}_L \\
-      \fun{extend} ~&~\fun{flip}~(++) \\
-      \fun{zero}~&~[]
-    \end{array}
-  \end{equation*}
-  \emph{$\DCat$ structure instantiation $\DCat_{constDer\_L}$}
-  \begin{equation*}
-    \begin{array}{l@{~\leteq~}l@{~~~~}lr}
-      \type{DerType}_L~&~\Nt \\
-      \fun{takeDer}~txs~&~\Nt \\
-      \fun{evalDer}~txs~s~ds~&~\begin{cases}
-        ds & \text{ if } \fun{validUpdate}_L~s~ds~\neq~\Err \\
-        \Err & \text{ otherwise}
-      \end{cases} \\
-    \end{array}
-  \end{equation*}
-  \caption{Instantiation of data-differentiable structure in $\type{SLC}_L$ }
-  \label{fig:diff-cat-inst}
-\end{figure*}
-
-We give one way to instantiate the data-differentiable structure in a single-ledger
-category $\type{SLC}_L$ in Figure \ref{fig:diff-cat-inst}, which we will denote
-$\DCat_{constDer\_L}$.
-
-This instantiation of the $\Diff$ structure is common to all $\type{SLC}_L$ categories,
-and trivially satisfies the constraints in Figure \ref{fig:diff}.
-The type representing
-changes to the (valid or $\Err$) ledger state, $\Diff_L$, is $\seqof{(\type{Tx}_L)}$
-because lists of transactions is exactly the data structure that represents
-changes to the state. Applying changes is therefore represented by transaction application
-$\fun{validUpdate}_L$. Extending one change set with another is concatenation of
-the two transaction lists, and the empty change set is the nil list.
-
-The $\DCat_{constDer\_L}$ structure we specified, however, is not necessarily
-commonly admissible as a $\DCat$ instantiation in all ledgers,
-as it does not guarantee that the $\fun{derivativeConstraint}$ will always be satisfied.
-We will now discuss the relation of the specification we give, the satisfiability of
-the derivative constraint, and both versions of the determinism definition.
-
-\subsection{$\Delta$ and derivation structure specification in ledgers}
-
-In this section we present and justify our choice of $\Delta_L$ definition, as well
-as use of $\DCat_{constDer\_L}$ structure.
-
-The idea of derivation, as presented in \cite{changes}, is that,
-given a function $f$ and an input $s$ to that function, takes a change set $ds$ to another change set $ds'$
-such that the changes $ds'$ are consistent with the changes of the original $ds$,
-but done after $f$ has been applied --- to the new state output by $f~s$.
-
-Recall that, intuitively, the definition of \emph{state-determinism} conveys that the changes
-a transaction makes \emph{are specified entirely within the transaction itself}.
-
-\todopv{this needs more explanation about the connection between Delta and the
-derivative constraint and evalDer being a proj function}
-
-The derivative constraint then reduces to, for all $s,~txs,~ds$,
-
-\[\text{(a)~:~~~} \fun{validUpdate}_L~ (\fun{validUpdate}_L~ ds~ s) ~txs~=~\fun{validUpdate}_L ~ds~(\fun{validUpdate}_L~ s ~txs) \]
-
-whenever $\Err$ is not produced by any computation. In particular,
-
-\[ \forall~s,~tx,~\fun{evalDer} ~(\fun{takeDer}~ []) ~s~ [tx] ~=~[tx] \]
-
-
-\subsection{Order-determinism, state-determinism, and derivation.~}
-\label{sec:od-sd-d}
-We can prove that if a ledger $L$ is order-determinismic, it admits data-differentiable
-category structure with constant derivaties.
-
-\begin{theorem}
-  Suppose $L$ is a ledger, and $\DCat_{constDer\_L}$ structure is as specified in Figure \ref{fig:dcat-pf}.
-  Then,
-
-  \[ \fun{orderDetConstraint}_L ~\Rightarrow~\type{SLC}_L~\in~\DCat_{constDer\_L} \]
-
-  \label{theo:dcat-pf}
-\end{theorem}
-
-\begin{proof}
-  For an arbitrary $s,~txs,~ds$, we can instantiate the variables in the
-  order-determinism definition in Figure \ref{fig:order-det} by
-
-  \[ \text{(b)~:~~~}\fun{orderDetConstraint}~s~(\fun{exted}~txs~ds)~(\fun{extend}~ds~txs) \]
-
-  Since
-
-  \[ \fun{extend}~ds~txs~\in~\fun{Permutation}~(\fun{extend}~txs~ds) \]
-
-  Whenever (b) holds for $s,~txs,~ds$, it immediately follows that so does $\fun{derivativeConstraint}$ .
-\end{proof}
-
-We can also prove that assuming a leger admits constant derivaties, it is
-state-deterministic.
-
-\begin{theorem}
-\label{the:state-det}
-  Suppose for a given ledger $L$ with $\DCat$ structure instantiated as in
-  Figure \ref{fig:diff-cat-inst}, the following hold :
-
-  \begin{itemize}
-    \item[(i)] \[ \forall~s,~txs,~tx,~\fun{evalDer} ~(\fun{takeDer}~ txs) ~s~ [tx]~=~[tx] \]
-    \item[(ii)] $\fun{derivativeConstraint}_L$
-    \item[(iii)] \[ \Delta_L~[tx]~s~=~\fun{evalDer} ~(\fun{takeDer}~ []) ~s~ [tx]) \]
-  \end{itemize}
-
-  It follows that $\fun{stateDetConstraint}_L$ holds.
-
-\end{theorem}
-
-\begin{proof}
-  To prove this, observe that in a category $\type{SLC}_L$ that admits $\DCat_{constDer\_L}$ structure
-  as specified in Figure \ref{fig:diff-cat-inst}, we get that for any $s,~s'$ and $tx$
-  valid in $s$ and $s'$,
-
-  \[ \Delta_L~[tx]~s~=~\fun{evalDer} ~[] ~s~ [tx]~=~[tx]~=~\fun{evalDer} ~[] ~s'~ [tx])~\Delta_L~[tx]~s' \]
-
-  Which proves the result.
-
-\end{proof}
-
-
-
-
-
-
-If constant derivatives are admissible in a ledger $L$, we can conclude that
-it is an order-deterministic ledger as well.
-
-\begin{theorem}
-\label{the:state-det}
-  Suppose for a given ledger $L$ with $\DCat$ structure instantiated as in
-  Figure \ref{fig:diff-cat-inst}, the following hold :
-
-  \begin{itemize}
-    \item[(i)] \[ \forall~s,~lstx,~tx,~\fun{evalDer} ~(\fun{takeDer}~ lstx) ~s~ [tx] \]
-    \item[(ii)] $\fun{derivativeConstraint}_L$
-  \end{itemize}
-
-  It follows that $\fun{orderDetConstraint}_L$ holds.
-
-\end{theorem}
-
-We use shorthand here
-
-\[ (s~ds)~:=~\fun{validUpdate}_L~ s~ ds \]
-
-\[ \fun{evalDer} ~txs1 ~s~ tx~ \leteq ~\fun{evalDer} ~(\fun{takeDer}~ txs1) ~s~ tx \]
-
-\begin{proof}
-
-Suppose we have a ledger where defining $\DCat_{constDer\_L}$ structure as in \ref{fig:diff-cat-inst}
-satisfies the $\fun{derivativeConstraint}$.
-
-We use strong induction on the length of $txs~\in~[\Tx]$ to prove that for any $s$,
-
-\[ \forall~txs'~\in~\type{Permutation}~txs,~(s~txs)~\neq~\Err~\neq~(s~txs')~\Rightarrow~ (s~txs)~=~(s~txs') \]
-
-Base case, $txs = []$ is trivial.
-Induction step : suppose that for some $n$, for any $txs$ with $\fun{len}~txs~~\leq~n$,
-the above claim is holds. We want to show that it holds for $n+1$.
-
-We can say that for any decomposition $txs~=~txs1~++~txs2$, for some two lists $txs1,~txs2$,
-
-\[ (s~tx)~txs ~=~((s~tx)~txs1)~txs2 \]
-
-And, if
-
-\[((s~tx)~txs1)~txs2~\neq~\Err~\neq~((s~txs1)~(\fun{evalDer} ~txs1 ~s~ tx))~txs2 \]
-
-We get that, by the $\fun{derivativeConstraint}$,
-
-\[ ... ~=~ ((s~txs1)~(\fun{evalDer} ~txs1 ~s~ tx))~txs2~=~((s~txs1)~tx)~txs2 \]
-
-Now, $(s~txs1)$ is independent of the order of $txs1$ by the strong induction hypothesis,
-as is $((s~txs1)~tx)~txs2$ on the order of $txs2$ (or $txs1$), and
-$(s~txs)$ on the order of $txs$.
-
-We can conclude that inserting $tx$ anywhere in the list $txs$ gives the same
-state $((s~txs1)~tx)~txs2$ or $\Err$. That is,
-any permutation of the list of length $n+1$, $txs1~++~[tx]~++~txs2$,
-will result in the same state, or an $\Err$ as well. This proves the
-result for permutations of lists of arbitrary length.
-
-\end{proof}
-
-
-So, if we choose to define the ledger changes $\Delta$ as in \ref{the:state-det},
-a ledger is both state- and order-deterministic exactly when it admits
-the following definition of a derivative of a single transaction (such that
-it satisfies the $\fun{derivativeConstraint}$) :
-
-\[\fun{evalDer} ~ls ~s~ [tx] ~=~ [tx] \]
-
-\todopv{is it true that evalDer indep. of function => it is indep. of state too, and vice-versa?}
-
-
-\subsection{Update Determinism.~}
-\label{sec:det-examples}
-
-\subsection{Examples.~}
-\label{sec:det-examples}
-
-In some of the following examples, we use an orthogonal but complementary context
-to determinism --- the notion of \emph{replay protection}.
-
-\begin{definition}
-  In a ledger with \emph{replay protection},
-
-  \[ \forall~lstx,~tx,~tx~\in~lstx ~ \Rightarrow~\fun{validUpdate}_L~\fun{initState}~(lstx~++~[tx])~=~\Err \]
-\end{definition}
-
-This is a valuable property to have to avoid adversarial or accidental replaying of transactions.
+\subsection{Aspirational results}
 
 \begin{itemize}
-  \item[(i)] \emph{UTxO ledger}. A basic UTxO ledger $UTxO$ with the constraint in its $\ups_{UTxO}$ function
-  requiring that $\fun{nonEmpty}~(\fun{inputs}~tx)$ provides replay protection since
-  each output can only be consumed once, preventing any other (or the same) transaction consuming that
-  output again, and therefore from being reapplied.
-
-  A UTxO ledger is also deterministic. Note that we assume here that there are no hash collissions.
-  A hash collission possibility undermines both determinism and replay protection.\\
-
-  \item[(ii)] \emph{Account ledger with value proofs.} A ledger $AP$ where the state consists of a
-  map $\State_{AP}~\leteq~\type{AccID}~\mapsto~\type{Assets}$, and $\Tx_{AP}~\leteq~(\State_{AP},~\State_{AP})$.
-  If for a given state and transaction $s,~tx$, $\fun{fst}~tx~\subseteq~s$, the
-  update function outputs $(s~\setminus~\fun{fst}~tx)~\cup~(\fun{snd}~tx)$. Presumably,
-  there will also be a preservation of value condition imposed on the asset total.
-
-  This ledger provides no replay protection --- one can easily submit transactions
-  that keep adding and removing the same key-value pairs.
-
-  Note here that a regular account-based ledger is also deterministic, but not when
-  smart contracts or case analysis is added (eg. the $\ups$ allows for transfer
-  for a quantity $q$ \emph{or} any amount under $q$ if $q$ is not available). This
-  value-proof feature makes it possible to enforce determinism even in such
-  conditions of multiple control flow branches. Account-based ledgers also, unlike
-  the UTxO model, do not offer a simple, space-efficient solution to replay protection.
-  Ethereum does offer it, but it is somewhat convoluted, see EIP-155. \\
-
-  \item[(iii)] \emph{Account ledger with value proofs and replay protection}. It is easy to add
-  replay protection to the previous example. For example, by extending the data
-  stored in the state,
-
-  \[ \State_{APreplay}~\leteq~([\Tx_{AP}],~\type{AccID}~\mapsto~\type{Assets}) \]
-
-  The update function will then have an additional check that a given $tx~\notin~\fun{txList}~s$. \\
-
-  \item[(iv)] \emph{Non-deterministic differentiable ledger.} It is possible to have a ledger
-  that is differentiable, has replay protection, but is not deterministic. Let us
-  extend the above state with a boolean,
-
-  \[ \State_{APB}~\leteq~(\Bool,~[\Tx_{APB}],~\type{AccID}~\mapsto~\type{Assets}) \]
-
-  \[ \Tx_{APB}~\leteq~((\Bool,~\Bool),~(\State_{AP},~\State_{AP})) \]
-
-  And specify $\ups~s~=~s'$ in a way that the boolean of the state $s$ is updated in $s'$ whenever
-  the first boolean in the transaction matches the one in the state :
-
-  \[ \fun{bool}~s' ~\leteq~ \begin{cases}
-     \fun{snd}~(\fun{bool}~tx) & \text{ if } \fun{fst}~(\fun{bool}~tx)~==~\fun{bool}~s \\
-     \fun{bool}~s & \text{ otherwise}
-  \end{cases} \]
-
-  We can define differentiation for such a ledger in a way that allows switching the order of application
-  of functions $ds$ and $txs$ by using re-interpreting the changes $txs$ makes when $ds$ is applied
-  first so that the $\fun{derivativeConstraint}$ is satisfied :
-
-    \[\fun{evalDer} ~txs ~s~ ds ~\leteq~ ds++ [txFlip] \]
-
-    where
-
-    \[ txFlip~=~((\fun{bool}~(s~txs),~\fun{bool}~(s~ds~txs)),~\Nt) \]
-
-    The $\fun{evalDer}$ function cannot be defined to be a projection of the third
-    coordinate, as this does not satisfy the constraint. It is straightforward to change the $\ups$
-    function of the $APB$ ledger
-    such that a valid derivative function can be a simple projection, and the ledger - deterministic. The $\ups$ function must
-    produce an $\Err$ instead of
-    allowing the state update to take place even if $\fun{fst}~(\fun{bool}~tx)~==~\fun{bool}~s$ does not hold.
-
-
+  \item[(i)] State and thread det's are equivalent
+  \item[(ii)] Both imply order-det
+  \item[(iii)] Injectivity : $\forall s, s', txs, s \odot txs = s' \odot txs \Rightarrow s = s'$)
 \end{itemize}
+
+% order => update?
+% update 0 A  =  A
+%  update 0 B  =  B
+%  update 0 C  =  C
+%  update 0 X  =  err
+%
+%  update 1 A  =  A
+%  update 1 B  =  C
+%  update 1 C  =  B
+%  update 1 X  =  err
+%
+%  update a A  =  err
+%  update a B  =  err
+%  update a C  =  err
+%  update a X  =  A
+%
+%  update b A  =  err
+%  update b B  =  err
+%  update b C  =  err
+%  update b X  =  B

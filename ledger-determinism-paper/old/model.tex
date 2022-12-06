@@ -1,96 +1,217 @@
 \section{The Abstract Ledger Model}
 \label{sec:model}
 
+We introduce our ledger model and define some basic structure.
 
-Each instance of $\LS$ (ledger specification type) requires the structure
-given in Figure \ref{fig:ledger-spec} to be defined.
+\todopv{make notes of assumptions of finiteness or at least classical logic?}
 
-We denote by $A_{\Err}$ a type constructed from $A$ that is identical to
-\[ A^?~=~A~\uniondistinct~\Nt \]
+\subsection{What is a ledger?}
+\label{sec:what}
 
-We use the $A_{\Err}~=~A~\uniondistinct~\Err$ to highlight that
-there was an error, rather than a valid value $\Nt$.
+A ledger specification is given by the types and functions in Figure \ref{fig:ledger-spec}.
+We use the notation $\odot$ to suggest right monoid action of transaction lists on states.
+The monoid operation on lists is concatenation, and its action on states must be
+associative.
 
 \begin{figure*}[htb]
-  \emph{$\LS$ Type Accessors}
+  \emph{Ledger Specification Types}
   %
   \begin{equation*}
     \begin{array}{r@{~\in~}l@{~~~~}lr}
-      \type{Tx}_L
-      & \Type
-      & \text{Accessor for the type of the transactions} \\
-      \type{State}_L
-      & \Type
-      & \text{Accessor for the type of the ledger state} \\
+      \Tx
+      & \Set
+      & \text{The type of the transactions} \\
+      \State
+      & \Set
+      & \text{The type of the ledger state} \\
     \end{array}
   \end{equation*}
-  \emph{$\LS$ functions}
+  \emph{Ledger Specification Functions}
   %
   \begin{equation*}
     \begin{array}{r@{~\in~}l@{~~~~}lr}
-    \ups_L & ~\type{Tx}_L \to \type{State}_L \to (\type{State}_L)_{\Err}
+    \ups & ~\type{State} \to \type{Tx} \to \type{State}
     & \text{Updates state with a given transaction} \\
-    \fun{initState}_L & ~\type{State}_L
-    & \text{Gives the initial state of the specification} \\
+    \fun{initState} & ~\type{State}
+    & \text{The initial state of the specification} \\
     \end{array}
   \end{equation*}
-  \caption{Ledger Specification for a ledger $L\in~\LS$}
+  \emph{Ledger Specification Notation}
+  %
+  \begin{equation*}
+    \begin{array}{r@{~}l@{~~~~}lr}
+    s~\odot~tx~ ~=~&~ \ups~s~tx  \\
+    & \text{Update state $s$ with transaction $tx$} \\
+    \nextdef
+    s~\odot~[tx_1, ... , tx_n]~~= &~ \ups~(...~ (\ups~(\ups~s~tx_1)~tx_2) ~...)~ tx_n \\
+    & \text{Update state $s$ with transaction $tx$} \\
+    \end{array}
+  \end{equation*}
+  \emph{Ledger Update Associativity}
+  %
+  \begin{equation*}
+    \begin{array}{r@{}l@{~~~~}lr}
+    \fun{ledgerAssoc}~\in~&~ \forall s, txs1, txs2,~~s \odot txs1 \odot txs2 = s \odot (txs1 ++ txs2)  \\
+    & \text{The ledger update function is associative} \\
+    \end{array}
+  \end{equation*}
+  \caption{Ledger specification types and functions}
   \label{fig:ledger-spec}
 \end{figure*}
 
+\subsection{Error states}
+\label{sec:errors}
+
+Given a ledger specification, we can define the following additional structure,
+see Figure \ref{fig:ledger-aux}. A ledger may have a collection of \emph{error states} $\Err$,
+each of which having only one possible transition out of it - back to itself.
+We will sometimes abuse notation by writing $s = \Err$ instead of $s \in \Err$.
+
+The collection of \emph{valid states} $\V$ contains all states reachable from the initial state,
+including any error states, if those are reachable. Note here that we abuse the
+notation $s \odot tx$, by using it for both $s \in \State$ and $s \in \V$.
+
+
 \begin{figure*}[htb]
-  \emph{State Computation}
-  %
-  \begin{align*}
-    & \fun{updateErr}_L ~\in~ \type{Tx}_L \to \type{State}~L_{\Err} \to (\type{State}_L)_{\Err} \\
-    & \fun{updateErr}_L ~tx~s~ ~=~
-        \begin{cases}
-          \Err & \text{if~} s = \Err \\
-          \ups~tx~s & \text{otherwise}
-        \end{cases} \\
-    & \text{Updates a error state} \\~\\
+    \emph{Error States and Valid States}
     %
-    & \fun{computeState}_L ~\in~ \type{State}_L \to \seqof{(\type{Tx}_L)} \to (\type{State}_L)_{\Err} \\
-    & \fun{computeState}_L~ initS ~txs ~=~
-        \fun{foldl}~\fun{updateErr}_L~initS~txs \\
-    & \text{Applies a list of transactions to the initial state} \\~\\
-    %
-    & \type{ValSt}_L ~\in~ \Type \\
-    & \type{ValSt}_L ~=~
-        \{ ~s~ \mid ~\fun{validState}_L~s~\}_{\Err} \\
-    & \text{Set of all valid states of $L$} \\~\\
-    %
-    & \fun{validUpdate}_L ~\in~ \type{ValSt}_L \to \seqof{(\type{Tx}_L)} \to \type{ValSt}_L\\
-    & \fun{validUpdate}_L~s~txs ~=~\\
-        &~~~~\begin{cases}
-          \Err & \text{if~} s = \Err \\
-          (\fun{computeState}_L~s~txs,~\fun{proveVl}_L~s~txs) & \text{otherwise}
-        \end{cases} \\
-    & \text{A valid state is updated to another valid state or $\Err$} \\~\\
-  \end{align*}
-  \emph{Validity of ledgers, transactions, and states}
-  %
-  \begin{align*}
-    & \fun{validTx}_L ~\in~ \type{Tx}_L \to \type{State}_L \to \Bool \\
-    & \fun{validTx}_L~tx~s~ = ~\fun{update}_L ~tx~s~ \neq ~\Err \\
-    & \text{Transaction updates a state non-trivially} \\~\\
-    %
-    & \fun{valid}_L ~\in~ \seqof{(\type{Tx}_L)} \to \Bool \\
-    & \fun{valid}_L~txs~ = ~\fun{computeState}_L ~txs~ \neq ~\Err \\
-    & \text{Computed state is non-trivial} \\~\\
-    %
-    & \fun{validState}_L ~\in~ \type{State}_L \to \type{Prop} \\
-    & \fun{validState}_L~s~ = ~\exists~~txs~\in~\seqof{(\type{Tx}_L)},~
-      s~=~\fun{computeState}_L~(\fun{initState}_L) ~txs \\
-    & \text{Given state is non-trivial}
-  \end{align*}
-  \caption{$\LS$ auxiliary functions and definitions}
+    \begin{align*}
+      & \Err ~\in~ \powerset{\State} \\
+      & \Err ~=~ \{~s~\mid~\forall~tx,~\ups~s~tx~=~s~\} \\
+      & \text{Collection of error states} \\
+      %
+      \nextdef
+      & \V ~\in~ \Set \\
+      & \V ~=~
+          \{ ~s~ \mid ~\exists~\var{lstx}~\in~[Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\} \\
+      & \text{Set of all valid states} \\
+    \end{align*}
+  \caption{Ledger specification additional structure}
   \label{fig:ledger-aux}
 \end{figure*}
 
-Proof-constructing function
+\subsection{Threads}
+\label{sec:threads}
 
-\[\fun{proveVl}_L ~\in~ \type{ValSt}_L \to \seqof{(\type{Tx}_L)} \to \]
-\[ (\fun{validState}_L~s) \vee (\fun{computeState}_L~s~txs~=~\Err)\]
+We call a \emph{thread} in a ledger the pair $(\T, \pi)$ of a target type and a function
+from the ledger state to $\T$, as specified in Figure \ref{fig:ledger-thread}.
+Threads will be used to study the evolution of substates
+of the ledger. We can consider these as "observables" within the ledger state.
 
-Proof of $\fun{proveVl}_L~s~txs$ goes here.
+Given a thread $(\T, \pi)$, we may consider it a ledger in its own right, and refer
+to this ledger as a $\T$-subledger of the original ledger. To construct
+this subledger, we specify its transaction type as a pair of a transaction $tx$
+and the larger state $s$
+to which it is being applied, denoted by $tx_s$. We define the
+update function and initial state of the $T$-subledger in terms of data in the
+bigger ledger, as in Figure \ref{fig:ledger-thread}.
+
+
+\begin{figure*}[htb]
+  \emph{Threads structure}
+  %
+  \begin{align*}
+    & \T ~\in~ \Set \\
+    & \text{The type of a thread} \\
+    \nextdef
+    & \pi ~\in~ \State \to \T \\
+    & \text{Function computing the value of a ledger thread at a given state} \\
+  \end{align*}
+  \emph{Thread subledger}
+  %
+  \begin{align*}
+    & \fun{initState}_{\T} \in \T \\
+    & \fun{initState}_{\T} = \pi ~\fun{initState} \\
+    & \text{Initial state of the subledger defined by the thread T} \\
+    \nextdef
+  \end{align*}
+  \emph{Thread properties}
+  %
+  \begin{align*}
+    & \fun{sameErrs} ~=~ \forall~s \in \V, s \in \Err \Rightarrow \pi~s \in \Err \\
+    & \text{Any subledger specified by a thread enforces mapping errors to errors} \\
+  \end{align*}
+  \caption{Ledger threads}
+  \label{fig:ledger-thread}
+\end{figure*}
+
+\subsection{Ledger and state comparison relations}
+\label{sec:relations}
+
+To reason about ledger determinism, we would like to be able to specify the difference between
+and to compare valid states. We begin by re-stating our ledger update function as
+a tertiary relation rather than a two-argument function. Let us define
+such a relation $\mathcal{LR}$, see Figure \ref{fig:ledger-aux}.
+
+We would like to describe arbitrary paths between any two valid non-$\Err$ states.
+For this we define the relation $\mathcal{UR}$, which is similar to $\mathcal{LR}$, but each
+of the transactions in the transition across a sequence valid states can appear
+either in the forward direction $s_i \odot tx = s_{i+1}$ (specified as $(s_i, [(\True, tx)], s_{i+1})$),
+or in the backward direction, $s_{i+1} \odot tx = s_{i}$, specified as $(s_i, [(\False, tx)], s_{})$.
+
+We use the following notation for representing triples that are in the $\mathcal{UR}$ relation :
+
+\[ \langle s, utxs, s' \rangle ~~ \Rightarrow ~~(s, txs, s') \in  \mathcal{UR} \]
+
+We introduce the notation $\boxdot$ in Figure \ref{fig:ledger-aux}, which allows us to
+perform an
+
+We define the \emph{delta} of two valid ledger states, denoted $\Delta~(s, s')$, to be the collection of paths
+from $s$ to $s'$ in the undirected graph formed by valid, non-$\Err$ states as vertices and edges labelled
+by pairs of a transaction transitioning between the two states, and the direction in which
+it goes, expressed as a boolean.
+This collection is never empty, since $[s, ..., \fun{initState},..., s'] \in \Delta~(s, s')$.
+In some sense, the collection of fall paths between
+them. Note here that distinct transactions (and transaction sequences)
+may give the same state update, so that $s \odot txs = s' \odot txs$ for some distinct $s, s'$.
+
+We introduce the relation $*=$ to compare states. Two states satisfy this relation
+if they are equal, or one of them is an $\Err$ state. Note that this relation is
+not transitive, as if $s \neq s'$, it still holds that $s *= \Err *= s'$.
+
+We introducte the relation $=*$ to compare collections of transition sequences out of two
+valid states. Two collections are $=*$-equal whenever they both contain the same
+sequences of transitions, except for possibly those sequences in either that lead
+to an $\Err$ state. Note that this relation is also not transitive, since
+
+\todopv{example}
+
+\begin{figure*}[htb]
+  \begin{align*}
+    & \boxdot  ~\in~ \State \to (\Bool,~\Tx) \to \powerset{\State} \\
+    & s \boxdot (b,~tx) ~=~ \{~s'~\mid~~b \Rightarrow s~\odot~tx~=~s'~ \wedge \neg b \Rightarrow s'~\odot~tx~=~s\} \\
+    & \text{Notation of applying or unapplying a transaction} \\
+    \nextdef
+    & \mathcal{LR}  ~\in~ \powerset (\State \times [\Tx] \times \State) \\
+    & \mathcal{LR} = \{~ (s \in \V, txs \in [\Tx], s' \in \V)~\mid~\Err \neq s\odot txs = s' \neq \Err \} \\
+    & \text{All non-error transitions between valid ledger states} \\
+    \nextdef
+    & \mathcal{UR}  ~\in~ \powerset (\State \times [(\Bool, \Tx)] \times \State) \\
+    & \mathcal{UR} =\{~(s, [], s')~\mid~\Err\neq s = s'\} ~\cup~ \{~ (s \in \V, [(b_1, tx_1), ... , (b_k, tx_k)] \in [\Tx], s' \in \V)~\mid~\\
+    & ~~~~ \exists~ [s_1, ..., s_{k+1}],~s = s_1 \neq \Err,~s' = s_{k+1} \neq \Err, ~k \geq 1, \forall 1 \leq i \leq k,~  \\
+    & ~~~~ ((b_i \wedge (s_{i}, [tx_i], s_{i+1}) \in \mathcal{LR}) \vee (\neg b_i \wedge (s_{i+1}, [tx_i], s_{i})~\in~\mathcal{LR})~\} \\
+    & \text{All non-error transitions in either direction between valid ledger states} \\
+    \nextdef
+    & \boxdot  ~\in~ \State \to [\Bool,~\Tx] \to \powerset{\State} \\
+    & s \boxdot [(b_1,~tx_1), ..., (b_k,~tx_k)] ~=~ (s \boxdot ) \\
+    & \text{Notation of applying or unapplying a transaction} \\
+    \nextdef
+    & \Delta ~\in~ (\V \times \V) \to \powerset{[(\Bool, \Tx)]} \\
+    & \Delta (s, s')~=~\{~utxs~\mid~ (s, utxs, s') \in \mathcal{UR}~\} \\
+    & \text{Collection of paths from $s$ to $s'$ in two-directional transaction graph} \\
+    %
+    \nextdef
+    & (*=) ~\in~ \State \to \State \to \Bool \\
+    & s~ *=~ s' ~=~ (s = s') \vee (s \in \Err) \vee (s' \in \Err) \\
+    & \text{Relation containing pairs of identical states or a state and an error state} \\
+    %
+    \nextdef
+    & (=*) ~\in~ \V \to \V \to \powerset{[(\Bool, \Tx)]} \to \powerset{[(\Bool, \Tx)]} \to \Bool \\
+    & \var{stx1} ~=*_{s1,s2}~ \var{stx2} ~=~
+     (\forall~\var{lstx}~\in~\var{stx1},~s1\boxdot\var{lstx}~\subseteq~\Err~\vee~\var{lstx}~\in~\var{stx2}) \\
+    & ~~~~ \wedge~ (\forall~\var{lstx}~\in~\var{stx2},~s2\boxdot\var{lstx}~\subseteq~\Err~\vee~\var{lstx}~\in~\var{stx1}) \\
+    & \text{Relation compating sets of transitions from two different states} \\
+  \end{align*}
+  \caption{Comparisons of states and state transition collections}
+  \label{fig:ledger-aux}
+\end{figure*}

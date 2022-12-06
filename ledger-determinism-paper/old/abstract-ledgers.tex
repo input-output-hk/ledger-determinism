@@ -30,6 +30,7 @@
 \usepackage[capitalise,noabbrev,nameinlink]{cleveref}
 \usepackage{float}
 \usepackage{upgreek,textgreek}
+\usepackage[all]{xy}
 
 % *** ALIGNMENT PACKAGES ***
 %
@@ -82,6 +83,8 @@
 }
 \makeatother
 
+\newcommand{\pullbackcorner}[1][dr]{\save*!/#1-1.2pc/#1:(-1,1)@^{|-}\restore}
+\newcommand{\wcard}[0]{\rule[-.5mm]{2mm}{.2mm}}
 \newcommand{\code}{\texttt}
 \renewcommand{\i}{\textit}  % Just to speed up typing: replace these in the final version
 \renewcommand{\t}{\texttt}  % Just to speed up typing: replace these in the final version
@@ -105,7 +108,6 @@
 \newcommand\cR{\ensuremath{\}}}
 
 \newcommand{\List}[1]{\ensuremath{\s{List}[#1]}}
-\newcommand{\Set}[1]{\ensuremath{\s{Set}[#1]}}
 \newcommand{\FinSet}[1]{\ensuremath{\s{FinSet}[#1]}}
 \newcommand{\Interval}[1]{\ensuremath{\s{Interval}[#1]}}
 \newcommand{\FinSup}[2]{\ensuremath{\s{FinSup}[#1,\linebreak[0]#2]}}
@@ -204,23 +206,24 @@
 \newcommand{\Type}{\type{Type}}
 \newcommand{\Diff}{\type{Diff}}
 \newcommand{\ValSt}{\type{ValSt}}
-\newcommand{\Block}{\type{Block}}
 
 %ledger spec commands
 \newcommand{\LS}{\mathcal{L}\mathcal{S}}
 \newcommand{\State}{\type{State}}
+\newcommand{\V}{\type{V}}
+\newcommand{\T}{\type{T}}
 \newcommand{\Tx}{\type{Tx}}
 \newcommand{\ID}{\type{ID}}
 \newcommand{\Th}{\mathcal{T}}
 \newcommand{\Tu}{\mathcal{U}}
-\newcommand{\T}{\type{T}}
 \newcommand{\Err}{\type{Err}}
 \newcommand{\DCat}{\type{DCat}}
 \newcommand{\ups}{\fun{update}}
 \newcommand{\Time}{\type{Time}}
 \newcommand{\True}{\type{True}}
 \newcommand{\False}{\type{False}}
-
+\newcommand{\Set}{\type{Set}}
+\newcommand{\Monoid}{\type{Monoid}}
 
 \usepackage{etoolbox}
 
@@ -276,10 +279,10 @@
 
 \author{
   Polina Vinogradova\inst{1}
-  \and
-  IOG folk
-  \and
-  Univerity of Edinburgh folk
+  \and James	Chapman\inst{1}
+  \and Andre	Knispel\inst{1}
+  \and Orestis	Melkonian\inst{1}
+  \and Alexey Sorokin\inst{1}
 }
 
 \authorrunning{IOG and UofE folk}
@@ -290,7 +293,7 @@
   \email{firstname.lastname@iohk.io}
   \and
   University of Edinburgh,
-  \email{orestis.melkonian@ed.ac.uk, wadler@inf.ed.ac.uk}
+  \email{orestis.melkonian@ed.ac.uk} %, wadler@inf.ed.ac.uk}
 }
 
 \maketitle
@@ -317,12 +320,13 @@ design and architecture.
 
 \input{intro.tex}
 \input{model.tex}
-\input{categories.tex}
 \input{determinism.tex}
-\input{reversible.tex}
+\input{differentials.tex}
+\input{categories.tex}
+%\input{reversible.tex}
 %\input{multiset.tex}
-\input{threads.tex}
-\input{blockchain.tex}
+%\input{threads.tex}
+%\input{blockchain.tex}
 
 \bibliographystyle{splncs04}
 \bibliography{abstract-ledgers}

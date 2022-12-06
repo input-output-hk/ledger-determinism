@@ -1,26 +1,154 @@
 \section{Categories of Ledgers}
 \label{sec:cats}
 
-\subsection{Categories of ledgers}
+There are different categories one may construct out of a ledger specification.
 
-There are different ways to consider categories of ledgers.
+\textbf{Proposition : Valid states as pullbacks in $\Set$. } Suppose
+$\mathcal{P}$ is a pullback in $\Set$, \newline
 
-\textbf{Single-ledger category $\type{SLC}_L$.} The first category we look at
-is, for a given ledger $L~\in~\LS$ the category with a single object,
-$\type{ValSt}_L$, and lists of transactions $\seqof{\type{Tx}_L}$.
-The empty list is the identity function in the category, and composition of
-functions is list concatenation. To calculate the result of applying
-a list of transactions to a valid state, $\fun{validUpdate}_L$ is used.
+\begin{center}
+  \xymatrix{
+      \mathcal{P} \pullbackcorner \ar[r]^{\pi_2} \ar[d]_{\pi_1}   & [\Tx] \ar[d]^{\fun{initState} \odot \wcard} \\
+      \State \ar[r]^{\fun{id}_{\State}}                         & \State
+  }
+\end{center}
 
-\textbf{Category of all ledgers $\type{LED}$.} We may also consider the category of all
-ledgers, where each object is given by a ledger specification $L~\in~\LS$, ie.
+or a given ledger $L = (\State, \Tx, \odot, \fun{initState})$. Then the set of all
+valid states $\V = \pi_2 \mathcal{P}$.
 
-\[ (\type{Tx}_L,~\type{State}_L,~\ups_L,~\fun{initState}_L) \]
+\textbf{Proof. } Recall that
 
-And the maps between ledgers $\fun{f}~\in~\fun{hom}~(L,~K),~L,~K~\in~\LS$ are ones that
-map valid states to valid states, $\Err$ to $\Err$, transactions to transactions,
-and preserve $\ups_L$ and $\fun{initState}_L$, so
+\[ \V~=~ \{ ~s~ \mid ~\exists~\var{lstx}~\in~[Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\} \]
 
-\[ \fun{f}~(\ups_L~tx_L~s_L)~=~\ups_K~(\fun{f}~tx_L)~(\fun{f}~s_L) \]
+Recall that a pullback in $\Set$ is defined by
 
-\[ \fun{f}~\fun{initState}_L~=~\fun{initState}_K \]
+\[ \mathcal{P}~=~ \{ ~(txs, s)~ \mid ~\fun{initState}~\odot~\var{txs}~=~s~\} \]
+
+Now, for any $s \in \V$, we pick a $txs$ such that $\fun{initState}~\odot~\var{txs}~=~s$,
+since such a $txs$ exists. So, $(txs, s) \in \mathcal{P} ~~\Rightarrow ~~s \in \pi_2 \mathcal{P}$.
+
+For any $s \in \pi_2 \mathcal{P}$, there exists $(txs, s) \in \mathcal{P}$ such that
+$\pi_2 (txs, s) = s$, and $\fun{initState}~\odot~\var{txs}~=~s$, which proves the result.
+
+\subsection{Single-ledger category}
+\label{sec:slc}
+
+Given a ledger $L = (\State, \Tx, \odot, \fun{initState})$, we define the category $\type{SL}$, constructed
+from a single ledger specification's types, transitions, and initial state,
+in the following way :
+
+\begin{itemize}
+  \item[(i)] Objects : $\fun{Obj}~\type{SL} = \State$ \newline
+
+  \item[(ii)] Morphisms : $\fun{Hom}~S1~S2 = \{ ~\wcard~\odot~txs \mid ~txs \in [\Tx]~,~S1~ \odot~txs~=~S2 \}$ \newline
+
+  \item[(iii)] Identity : $\fun{id}_{S1} = [] ~\in~\fun{Hom}~S1~S1 $ \newline
+
+  \item[(iv)] Composition : $\forall~txs1,~txs2, S$ \\
+  $(\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1) (S) = (\wcard~\odot~txs2) (S~\odot~txs1) = (S~\odot~txs1) \odot txs2  \\
+  ~~~~ =  S~\odot~(txs1 ++ txs2)~~\Rightarrow ~~(\wcard~\odot~(txs1 ++ txs2))~\in ~\fun{Hom}~S1~S3$
+
+  \item[(v)] Associativity : holds due to the $\fun{ledgerAssoc}$ constraint.
+
+  % $\forall~txs1,~txs2,~tx3, S$ \\
+  % $(\wcard~\odot~txs3) ~\circ~((\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1)) (S)
+  % = (\wcard~\odot~txs3) ((\wcard~\odot~txs2) (\wcard~\odot~txs1) (S)) \\
+  % = (\wcard~\odot~txs3) ((\wcard~\odot~txs2) (S~\odot~txs1)) =  (\wcard~\odot~txs3) (S~\odot~(txs1 ++ txs2)) \\
+  % =  (S~\odot~(txs1 ++ txs2)) \odot txs3 = (S~\odot~((txs1 ++ txs2) ++ txs3))
+  %
+  %  ~\fun{Hom}~S1~S3$
+\end{itemize}
+
+
+\subsection{Category of all ledgers}
+\label{sec:all-ledgers}
+
+We first introduce some notions needed to describe the category of all ledgers $\type{Led}$
+and maps between them that preserve ledger structure.
+
+Let $\Set_{*}$ denote the category of pointed sets with maps $f \in \fun{Hom} (\{*\} \to S,~\{*\} \to S)$,
+such that $({*} \mapsto x \in S, s \in S) \mapsto (* \mapsto f(x), f(s)) \in Q$ for some
+set map $f : S \to Q$.
+
+Let $\Monoid$ denote a category of monoids $(M : \Set,~ \mu~:~ \Set \times \Set \to \Set,~ e : M)$
+and monoid action- and identity-preserving homomorphisms. We use $(M, \mu, e)$ and $M$
+interchangeably here.
+
+Let $\langle \wcard \rangle ~:~\Monoid~\dashv ~\Set~ :~ \mathcal{U}$ be the free-forgetful adjunction
+for monoids.
+
+Let us now define a functor $\Gamma$ :
+
+\[ \Gamma : \begin{cases}
+  \Set_{*} \times \Monoid \to \Set_{*} \times \Monoid  \\
+  (i : \{*\} \to S, M) \mapsto (\{*\} \to S \times \mathcal{U} M, M) \\
+  (f \times g : (i : \{*\} \to S, M) \to (\{*\} \to Q, N)) \mapsto
+    ((\langle f,~\mathcal{U}~g \rangle, g)  (\{*\} \to (S \times \mathcal{U} M), M) \to (\{*\} \to (Q \times \mathcal{U} N), N))
+\end{cases} \]
+
+We now define the natural transformations $\gamma : \Gamma^2 \to \Gamma$ and
+$\eta : \mathbb{1}_{\Set \times \Monoid} \to \Gamma$.
+
+Note that
+
+\[ \Gamma (i : \{*\} \to S, M) = (\langle i, \mathcal{U} e\rangle : \{*\} \to S \times \mathcal{U} M, M) \]
+
+and
+
+\[\Gamma^2 (i : \{*\} \to S, M) =
+(\langle i, \mathcal{U} e, \mathcal{U} e\rangle : \{*\} \to S \times \mathcal{U} M \times \mathcal{U} M, M) \]
+
+So that we define
+
+\[ \gamma_{(i : \{*\} \to S, M)} : \begin{cases}
+   \Gamma^2 (i : \{*\} \to S, M) \to \Gamma (i : \{*\} \to S, M)
+  \\
+  (* \mapsto (i, \mathcal{U} e, \mathcal{U} e), (s, m_1, m_2), m) \mapsto (* \mapsto (i, \mathcal{U} (\mu e e)), (s, \mathcal{U} (\mu m_1 m_2), m)
+\end{cases} \]
+
+\[ \eta_{(i : \{*\} \to S, M)} : \begin{cases}
+  (i : \{*\} \to S, M) \to (\langle i, \mathcal{U} e\rangle : \{*\} \to S \times \mathcal{U} M, M)  \\
+  (* \mapsto i, s, m) \mapsto (* \mapsto (i, \mathcal{U} e), (s, \mathcal{U} e) m)
+\end{cases} \]
+
+The data $(\Gamma, \gamma, \eta)$ is a monad on $\Set_{*} \times \Monoid$. A $\Gamma$-algebra
+is made up of $(i : \{*\} \to S, M)$ together with the following operation, induced
+by a monoid action $\odot : S \times M \to S$
+
+\[ \odot_{(i : \{*\} \to S, M)} : \begin{cases}
+  \Gamma (i : \{*\} \to S, M) \to (i : \{*\} \to S, M) \\
+  (* \mapsto (i, \mathcal{U} e), (s, m_1), m) \mapsto (* \mapsto i, (s \odot m_1), m)
+\end{cases} \]
+
+We define the category of all ledgers, $\mathcal{L}$, in terms of these structures.
+Recall here that the morphisms in the product category with objects $\Set_{*} \times \Monoid$
+are those that preserve $*$ in the first coordinate, and monoid structure in the second.
+
+\begin{itemize}
+  \item[(i)] Objects : \newline
+  $\fun{Obj}~\mathcal{L} = \Set_{*} \times \Monoid$ \newline
+
+  \item[(ii)] Morphisms are a subset of the morphisms of the product morphisms
+  between objects of $\Set_{*} \times \Monoid$ which contains only those maps that
+  preserve each $\odot_{(i : \{*\} \to S, M)}$  : \newline
+
+  $\fun{Hom}~(i : \{*\} \to S, M)~(i : \{*\} \to Q, N) = \{ f~:~(i : \{*\} \to S, M) \to (i : \{*\} \to Q, N) ~\mid~\\
+  ~~~~ \odot_{(i : \{*\} \to Q, N)}~\circ~(\Gamma~ f)~=~ f \circ \odot_{(i : \{*\} \to S, M)} \}$ \newline
+
+  \item[(iii)] Identity :
+  $ \odot_{(i : \{*\} \to Q, N)}~\circ~(\Gamma~ \mathbb{1}_{(i : \{*\} \to S, M)})~ \\
+  ~~~~~ = \odot_{(i : \{*\} \to Q, N)}~\circ~ \mathbb{1}_{\Gamma~(i : \{*\} \to S, M)} \\
+  ~~~~~ = \odot_{(i : \{*\} \to Q, N)} \\
+  ~~~~~ = \mathbb{1}_{(i : \{*\} \to S, M)} \circ \odot_{(i : \{*\} \to Q, N)}$ \newline
+
+  \item[(iv)] Composition (we drop the subscript of $\odot$ from here onwards) : \\
+  $\forall~f \in \fun{Hom}~(i : \{*\} \to S, M)~(i : \{*\} \to Q, N),~
+  g \in \fun{Hom}~(i : \{*\} \to Q, N)~(i : \{*\} \to P, R), \\
+  (g \circ f)~\circ~\odot~ = ~g (f \circ \odot) = ~g ~(\odot \circ (\Gamma f)) \\
+  ~~~~ = ~g ~(\odot \circ (\Gamma f)) \\
+  ~~~~ = ~\odot \circ (\Gamma f) \circ (\Gamma f) \\
+  ~~~~ = ~\odot \circ (\Gamma (g \circ f))$ \newline
+
+  \item[(v)] Associativity : inherited from maps in $\Set_{*} \times \Monoid$.
+
+\end{itemize}
