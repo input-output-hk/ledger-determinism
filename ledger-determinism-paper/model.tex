@@ -52,7 +52,7 @@ update function $\odot$.
   %
   \begin{equation*}
     \begin{array}{r@{}l@{~~~~}lr}
-    \fun{concat}~:~&~ \forall s, txs1, txs2,~~s \odot txs1 \odot txs2 = s \odot (txs1 ++ txs2)  \\
+    \fun{respectsConcat}~:~&~ \forall s, txs1, txs2,~~s \odot txs1 \odot txs2 = s \odot (txs1 ++ txs2)  \\
     & \text{List concatenation is compatible with $\odot$} \\
     \end{array}
   \end{equation*}

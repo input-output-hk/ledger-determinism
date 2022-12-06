@@ -48,7 +48,8 @@ in the following way :
   $(\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1) (S) = (\wcard~\odot~txs2) (S~\odot~txs1) = (S~\odot~txs1) \odot txs2  \\
   ~~~~ =  S~\odot~(txs1 ++ txs2)~~\Rightarrow ~~(\wcard~\odot~(txs1 ++ txs2))~\in ~\fun{Hom}~S1~S3$
 
-  \item[(v)] Associativity : holds due to the $\fun{ledgerAssoc}$ constraint.
+  \item[(v)] Associativity : holds because the monoid action respects list concatenation
+  in the list monoid (ie. $\fun{respectsConcat}$)\\
 
   % $\forall~txs1,~txs2,~tx3, S$ \\
   % $(\wcard~\odot~txs3) ~\circ~((\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1)) (S)
@@ -146,7 +147,7 @@ are those that preserve $*$ in the first coordinate, and monoid structure in the
   g \in \fun{Hom}~(i : \{*\} \to Q, N)~(i : \{*\} \to P, R), \\
   (g \circ f)~\circ~\odot~ = ~g (f \circ \odot) = ~g ~(\odot \circ (\Gamma f)) \\
   ~~~~ = ~g ~(\odot \circ (\Gamma f)) \\
-  ~~~~ = ~\odot \circ (\Gamma f) \circ (\Gamma f) \\
+  ~~~~ = ~\odot \circ (\Gamma g) \circ (\Gamma f) \\
   ~~~~ = ~\odot \circ (\Gamma (g \circ f))$ \newline
 
   \item[(v)] Associativity : inherited from maps in $\Set_{*} \times \Monoid$.
