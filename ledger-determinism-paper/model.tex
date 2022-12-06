@@ -10,8 +10,9 @@ We introduce our ledger model and define some basic structure.
 
 A ledger specification is given by the types and functions in Figure \ref{fig:ledger-spec}.
 We use the notation $\odot$ to suggest right monoid action of transaction lists on states.
-The monoid operation on lists is concatenation, and its action on states must be
-associative.
+The monoid operation on lists is concatenation, which is compatible with the state
+update function $\odot$.
+
 
 \begin{figure*}[htb]
   \emph{Ledger Specification Types}
@@ -47,12 +48,12 @@ associative.
     & \text{Update state $s$ with transaction $tx$} \\
     \end{array}
   \end{equation*}
-  \emph{Ledger Update Associativity}
+  \emph{Compatibility}
   %
   \begin{equation*}
     \begin{array}{r@{}l@{~~~~}lr}
-    \fun{ledgerAssoc}~\in~&~ \forall s, txs1, txs2,~~s \odot txs1 \odot txs2 = s \odot (txs1 ++ txs2)  \\
-    & \text{The ledger update function is associative} \\
+    \fun{concat}~:~&~ \forall s, txs1, txs2,~~s \odot txs1 \odot txs2 = s \odot (txs1 ++ txs2)  \\
+    & \text{List concatenation is compatible with $\odot$} \\
     \end{array}
   \end{equation*}
   \caption{Ledger specification types and functions}
@@ -90,16 +91,18 @@ notation $s \odot tx$, by using it for both $s \in \State$ and $s \in \V$.
   \label{fig:ledger-aux}
 \end{figure*}
 
+\pagebreak
+
 \subsection{Threads}
 \label{sec:threads}
 
-We call a \emph{thread} in a ledger the pair $(\T, \pi)$ of a target type and a function
+We call a \emph{thread} in a ledger the pair $(\T, \pi, e)$ of a target type and a function
 from the ledger state to $\T$, as specified in Figure \ref{fig:ledger-thread}.
 Threads will be used to study the evolution of substates
 of the ledger. We can consider these as "observables" within the ledger state.
 
-Given a thread $(\T, \pi)$, we may consider it a ledger in its own right, and refer
-to this ledger as a $\T$-subledger of the original ledger. To construct
+A thread $(\T, \pi, e)$ induces a ledger to which we refer
+to as a $\T$-subledger of the original ledger. To construct
 this subledger, we specify its transaction type as a pair of a transaction $tx$
 and the larger state $s$
 to which it is being applied, denoted by $tx_s$. We define the
@@ -116,6 +119,9 @@ bigger ledger, as in Figure \ref{fig:ledger-thread}.
     \nextdef
     & \pi ~\in~ \State \to \T \\
     & \text{Function computing the value of a ledger thread at a given state} \\
+    \nextdef
+    & e ~\in~ \{~\pi~ s ~\mid~ s \in \Err~\} \\
+    & \text{The error that occurs when the update cannot be applied because of mismatched state} \\
   \end{align*}
   \emph{Thread subledger}
   %
@@ -124,6 +130,12 @@ bigger ledger, as in Figure \ref{fig:ledger-thread}.
     & \fun{initState}_{\T} = \pi ~\fun{initState} \\
     & \text{Initial state of the subledger defined by the thread T} \\
     \nextdef
+    & \odot_T \in \T (\State \times \Tx) \to \T \\
+    & q~\odot_T~(s, tx) = \begin{cases}
+      e & \text{ if } q \neq (\pi~ s) \\
+      \pi~(s \odot tx) \text{ otherwise}
+    \end{cases} \\
+    & \text{Update function of a T-ledger} \\
   \end{align*}
   \emph{Thread properties}
   %
@@ -134,6 +146,8 @@ bigger ledger, as in Figure \ref{fig:ledger-thread}.
   \caption{Ledger threads}
   \label{fig:ledger-thread}
 \end{figure*}
+
+\pagebreak
 
 \subsection{Ledger and state comparison relations}
 \label{sec:relations}

@@ -11,33 +11,23 @@ work is to formalize this property of ledgers, and study the constraints under
 which it can be guaranteed, thereby providing analysis tools and design principles for building ledgers
 whose transaction processing outcomes can be accurately forecast.
 
-Blockchain ledger and consensus design relies on the property that
-replaying a its transaction/block history produces
-the same output every time. We refer to this property as \emph{historic determinism}.
-The focus of in this work is \emph{predictive determinism}, which focuses on
-reasoning about the changes a transaction makes, and when these changes
-are themselves predictable, without needing to know the state to which they
-will be applied.
+Blockchain ledger and consensus design relies on the definition of the transaction processing function
+itself being entirely deterministic. The impossibility of predicting
+the exact on-chain state transactions will be applied to, however, is due to
+unpredictable network propagation of transactions, resulting in an arbitrary
+order in which they are processed as the source of non-determinism. Determinism
+can, therefore, be formulated entirely in the language of transaction application commutativity,
+but we retain the commonly used blockchain terminology in this work.
 
-The difficulty in predicting
-the exact on-chain state to which transactions/blocks will be applied is due to
-unpredictable network propagation of transactions, consensus design,
-rollbacks, malicious actors, etc. Full predictive determinism, which we will henceforth
-just call determinism, guarantees if a transaction
-is valid, the variations in the state due to the reasons mentioned above will not
-affect how the transaction is processed.
+We present an abstract
+ledger model capturing the architectural core shared by most blockchain platforms:
+a ledger is a state transition system, with valid transactions (or blocks) as the only transitions.
+We then formalize the definition of determinism in terms of this abstract functional
+specification of ledger structure, and use mathematical tools
+for analyzing them in order is to establish a way to reason about
+conditions under which the transaction order has no effect on the resulting state
+or parts thereof.
 
-In this work, we first specify a ledger model, then give some definitions of what
-it means for it to be deterministic. We also consider real-world constraints
-on ledger design that prevent full determinism from being implementable, and
-give an analysis of how to treat such less-deterministic ledgers in a useful way.
-
-Previous work on predictive determinism, with a similar ledger construction
-as we present here, is found in \cite{parallelism}. There are notable differences,
-such as a fixed set of observables, no analysis of transaction failure or analysis
-of determinism for the cases of dropped transactions, and the focus is more
-on use of existing ledgers in a deterministic way, rather than ledger design
-principles.
 A similar construction to our ledger definition is presented in \cite{paxos}.
 However, the focus there is on the ordering of state updates
 to optimize the execution of a particular consensus algorithm.
