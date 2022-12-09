@@ -4,25 +4,25 @@
 There are different categories one may construct out of a ledger specification.
 
 \textbf{Proposition : Valid states as pullbacks in $\Set$. } Suppose
-$\mathcal{P}$ is a pullback in $\Set$, \newline
+$\mathcal{P}$ is a pullback in $\Set$, and let $\State_e = \State \setminus \Err$, \newline
 
 \begin{center}
   \xymatrix{
       \mathcal{P} \pullbackcorner \ar[r]^{\pi_2} \ar[d]_{\pi_1}   & [\Tx] \ar[d]^{\fun{initState} \odot \wcard} \\
-      \State \ar[r]^{\fun{id}_{\State}}                         & \State
+      \State_e \ar[r]^{\fun{id}_{\State}}                         & \State_e
   }
 \end{center}
 
-or a given ledger $L = (\State, \Tx, \odot, \fun{initState})$. Then the set of all
+or a given ledger $L = (\State, \Tx, \odot, \fun{initState}, \Err)$. Then the set of all
 valid states $\V = \pi_2 \mathcal{P}$.
 
 \textbf{Proof. } Recall that
 
-\[ \V~=~ \{ ~s~ \mid ~\exists~\var{lstx}~\in~[Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\} \]
+\[ \V~=~ \{ ~s~\in \State_e~ \mid ~\exists~\var{lstx}~\in~[\Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\in \State_e~\} \]
 
 Recall that a pullback in $\Set$ is defined by
 
-\[ \mathcal{P}~=~ \{ ~(txs, s)~ \mid ~\fun{initState}~\odot~\var{txs}~=~s~\} \]
+\[ \mathcal{P}~=~ \{ ~(txs, s)~ \mid ~\fun{initState}~\odot~\var{txs}~=~s~\in~\State_e ~\} \]
 
 Now, for any $s \in \V$, we pick a $txs$ such that $\fun{initState}~\odot~\var{txs}~=~s$,
 since such a $txs$ exists. So, $(txs, s) \in \mathcal{P} ~~\Rightarrow ~~s \in \pi_2 \mathcal{P}$.
@@ -33,20 +33,22 @@ $\pi_2 (txs, s) = s$, and $\fun{initState}~\odot~\var{txs}~=~s$, which proves th
 \subsection{Single-ledger category}
 \label{sec:slc}
 
-Given a ledger $L = (\State, \Tx, \odot, \fun{initState})$, we define the category $\type{SL}$, constructed
+Given a ledger $L = (\State, \Tx, \odot, \fun{initState}, \Err)$, (recall $\State \subseteq \Err$)
+we define the category $\type{SL}$, constructed
 from a single ledger specification's types, transitions, and initial state,
 in the following way :
 
 \begin{itemize}
-  \item[(i)] Objects : $\fun{Obj}~\type{SL} = \State$ \newline
+  \item[(i)] Objects : $\fun{Obj}~\type{SL} = \State_e$ \newline
 
-  \item[(ii)] Morphisms : $\fun{Hom}~S1~S2 = \{ ~\wcard~\odot~txs \mid ~txs \in [\Tx]~,~S1~ \odot~txs~=~S2 \}$ \newline
+  \item[(ii)] Morphisms : \\
+  $\fun{Hom}~S1~S2 = \{ ~\wcard~\odot~txs \mid ~txs \in [\Tx]~,~S1~ \odot~txs~=~S2 \}$ \newline
 
   \item[(iii)] Identity : $\fun{id}_{S1} = [] ~\in~\fun{Hom}~S1~S1 $ \newline
 
-  \item[(iv)] Composition : $\forall~txs1,~txs2, S$ \\
-  $(\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1) (S) = (\wcard~\odot~txs2) (S~\odot~txs1) = (S~\odot~txs1) \odot txs2  \\
-  ~~~~ =  S~\odot~(txs1 ++ txs2)~~\Rightarrow ~~(\wcard~\odot~(txs1 ++ txs2))~\in ~\fun{Hom}~S1~S3$
+  \item[(iv)] Composition : $\forall~txs1,~txs2, S1$ \\
+  $(\wcard~\odot~txs2) ~\circ~(\wcard~\odot~txs1) (S1) = (\wcard~\odot~txs2) (S1~\odot~txs1) = (S1~\odot~txs1) \odot txs2  \\
+  ~~~~ =  S1~\odot~(txs1 ++ txs2)~~\Rightarrow ~~(\wcard~\odot~(txs1 ++ txs2))~\in ~\fun{Hom}~S1~S3$
 
   \item[(v)] Associativity : holds because the monoid action respects list concatenation
   in the list monoid (ie. $\fun{respectsConcat}$)\\
@@ -58,6 +60,45 @@ in the following way :
   % =  (S~\odot~(txs1 ++ txs2)) \odot txs3 = (S~\odot~((txs1 ++ txs2) ++ txs3))
   %
   %  ~\fun{Hom}~S1~S3$
+\end{itemize}
+
+A functor between two ledger categories, $F : L \to L'$ preserves $\fun{initState}$ and
+$\odot$. An example of a functor between two categories is one from a ledger
+$L = (\State, \Tx, \odot, \fun{initState}, \Err)$ to its $T$-subledger $L_T$, induced by
+the thread $(T, \pi, e)$.
+
+\[ L_T = (T, (\State \times \Tx), \odot_T, \pi~\fun{initState}, \pi~\Err) \]
+
+We define
+
+\[ \mathsf{F} : \begin{cases}
+  L \to L_T \\
+  S \mapsto \pi~S \\
+  (\wcard~\odot~txs) \mapsto (\wcard \odot_T (S, txs))
+\end{cases}  \]
+
+Note that $t \odot_T (S, txs)~\notin~\pi~\Err$ when $t \notin \Err$.
+
+\begin{itemize}
+  \item[(i)] By definition, $\fun{initState}$ is preserved.
+
+  \item[(ii)] The $\odot$ is preserved :
+
+ \[ \mathsf{F} (S \odot txs) = \pi (S \odot txs) = (\pi S)~\odot_T~(S, txs) = (\mathsf{F}~(\wcard~\odot~txs))~(\mathsf{F}~S)~ \]
+
+ \item[(iii)] Identity is preserved, for $\mathbb{1}_S = (\wcard \odot [])$ :
+
+ $ \mathsf{F} (\wcard \odot []) = \odot_T~(S, []) = \mathbb{1}_{\pi~S}$ \newline
+
+ \item[(iv)] For any $(\wcard \odot txs_1) : S1 \to S2, (\wcard \odot txs_2) : S2 \to S3$, \newline
+
+ $ \mathsf{F} ((\wcard \odot txs_2) \circ (\wcard \odot txs_1)) = \mathsf{F} (\wcard \odot (txs_1 ++ txs_2)) \\
+ ~~~~ = \wcard \odot_T (S1, txs_1 ++ txs_2) \\
+ ~~~~ = (\wcard \odot_T (S2, txs_2)) \circ (\wcard \odot_T (S1, txs_1))  \\
+ ~~~~ = (\mathsf{F} \odot txs_2) \circ (\mathsf{F} \odot txs_1)$ \newline
+
+ As no errors were generated in $L$ by applying $txs_1$ and $txs_2$, none are in
+ the update of $T$ either.
 \end{itemize}
 
 

@@ -13,6 +13,13 @@ We use the notation $\odot$ to suggest right monoid action of transaction lists 
 The monoid operation on lists is concatenation, which is compatible with the state
 update function $\odot$.
 
+A ledger may have a collection of \emph{error states} $\Err \subseteq \State$,
+each of which having only one possible transition out of it - back to itself.
+These error states are the result of applying transactions that cannot be
+meaningfully processed, such as ones that are lacking required signatures, etc.
+We will sometimes abuse notation by writing $s = \Err$ instead of $s \in \Err$.
+
+A complete ledger specificaiton is given by $L = (\State, \Tx, \odot, \fun{initState}, \Err)$.
 
 \begin{figure*}[htb]
   \emph{Ledger Specification Types}
@@ -37,6 +44,13 @@ update function $\odot$.
     & \text{The initial state of the specification} \\
     \end{array}
   \end{equation*}
+  \emph{Error States}
+  %
+  \begin{align*}
+    & \Err ~\in~ \powerset{\State} \\
+    & \Err ~\subseteq~ \{~s~\mid~\forall~tx,~\ups~s~tx~=~s~\} \\
+    & \text{Collection of error states} \\
+  \end{align*}
   \emph{Ledger Specification Notation}
   %
   \begin{equation*}
@@ -60,31 +74,21 @@ update function $\odot$.
   \label{fig:ledger-spec}
 \end{figure*}
 
-\subsection{Error states}
-\label{sec:errors}
+\subsection{Valid states}
+\label{sec:valid}
 
 Given a ledger specification, we can define the following additional structure,
-see Figure \ref{fig:ledger-aux}. A ledger may have a collection of \emph{error states} $\Err$,
-each of which having only one possible transition out of it - back to itself.
-We will sometimes abuse notation by writing $s = \Err$ instead of $s \in \Err$.
-
-The collection of \emph{valid states} $\V$ contains all states reachable from the initial state,
-including any error states, if those are reachable. Note here that we abuse the
+see Figure \ref{fig:ledger-aux}. The collection of \emph{valid states} $\V$
+contains all states reachable from the initial state,
+not including error states, if those are reachable. Note here that we abuse the
 notation $s \odot tx$, by using it for both $s \in \State$ and $s \in \V$.
 
 
 \begin{figure*}[htb]
-    \emph{Error States and Valid States}
-    %
-    \begin{align*}
-      & \Err ~\in~ \powerset{\State} \\
-      & \Err ~=~ \{~s~\mid~\forall~tx,~\ups~s~tx~=~s~\} \\
-      & \text{Collection of error states} \\
-      %
-      \nextdef
+   \begin{align*}
       & \V ~\in~ \Set \\
       & \V ~=~
-          \{ ~s~ \mid ~\exists~\var{lstx}~\in~[Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\} \\
+          \{ ~s~\in \State \setminus \Err~ \mid ~\exists~\var{lstx}~\in~[Tx],~\fun{initState}~\odot~\var{lstx}~=~s~\} \\
       & \text{Set of all valid states} \\
     \end{align*}
   \caption{Ledger specification additional structure}
@@ -109,6 +113,9 @@ to which it is being applied, denoted by $tx_s$. We define the
 update function and initial state of the $T$-subledger in terms of data in the
 bigger ledger, as in Figure \ref{fig:ledger-thread}.
 
+For $[tx_1, ..., tx_k] \in [\Tx]$, we use the notation
+
+\[ \odot_T (s, [tx_1, ..., tx_k]) = \odot_T [(tx_1, s \odot_T tx_1), ..., (tx_k, s \odot_T ... \odot_T tx_{k-1})] \]
 
 \begin{figure*}[htb]
   \emph{Threads structure}
@@ -136,12 +143,6 @@ bigger ledger, as in Figure \ref{fig:ledger-thread}.
       \pi~(s \odot tx) \text{ otherwise}
     \end{cases} \\
     & \text{Update function of a T-ledger} \\
-  \end{align*}
-  \emph{Thread properties}
-  %
-  \begin{align*}
-    & \fun{sameErrs} ~=~ \forall~s \in \V, s \in \Err \Rightarrow \pi~s \in \Err \\
-    & \text{Any subledger specified by a thread enforces mapping errors to errors} \\
   \end{align*}
   \caption{Ledger threads}
   \label{fig:ledger-thread}
